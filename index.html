@@ -1,0 +1,911 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Haushaltsplan</title>
+<meta name="theme-color" content="#2b5d8a">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Haushalt">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🏠</text></svg>">
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+<style>
+:root{--bg:#eef1f4;--card:#fff;--ink:#1b2430;--mute:#647081;--line:#d9dee5;--acc:#2b5d8a;--accs:#dce7f2;--red:#cf3e4f;--green:#2e9a57;--grey:#b9c0ca;--chip:#e3e8ee;--warn:#b7791f;
+ box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root{--bg:#12161b;--card:#1b2128;--ink:#e8edf2;--mute:#97a3b1;--line:#2c343e;--acc:#7fb2e0;--accs:#22344a;--red:#ef6878;--green:#56c47f;--grey:#48525e;--chip:#252d36;--warn:#e0a84a}}
+*{box-sizing:border-box}
+html{height:100%}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.45 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;-webkit-text-size-adjust:100%}
+button,input,select{font:inherit;color:inherit}
+button{cursor:pointer}
+.wrap{max-width:720px;margin:0 auto;padding:12px 14px 40px}
+header{display:flex;align-items:center;justify-content:space-between;gap:8px;margin:4px 0 12px}
+h1{font-size:22px;margin:0;letter-spacing:-.01em;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+h2{font-size:17px;margin:22px 0 8px}
+h3{font-size:15px;margin:0}
+.status{font-size:12px;color:var(--mute);display:flex;align-items:center;gap:6px;flex:none}
+.status i{width:8px;height:8px;border-radius:50%;background:var(--grey);display:inline-block}
+.status.ok i{background:var(--green)}.status.err i{background:var(--red)}
+.tabs{display:flex;background:var(--chip);border-radius:12px;padding:3px;gap:3px;position:sticky;top:env(safe-area-inset-top,0px);z-index:5}
+.tabs button{flex:1;border:0;background:none;padding:9px 2px;border-radius:9px;font-weight:600;color:var(--mute);font-size:14px;position:relative}
+.tabs button.on{background:var(--card);color:var(--ink);box-shadow:0 1px 2px rgba(0,0,0,.08)}
+.tabs sup{background:var(--red);color:#fff;border-radius:999px;font-size:10px;padding:1px 5px;margin-left:3px}
+.chips{display:flex;gap:6px;overflow-x:auto;padding:12px 0 4px;-webkit-overflow-scrolling:touch}
+.chip{border:1px solid var(--line);background:var(--card);border-radius:999px;padding:6px 12px;white-space:nowrap;display:flex;align-items:center;gap:6px}
+.chip.on{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.dot{width:10px;height:10px;border-radius:50%;display:inline-block;flex:none}
+.box{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:12px;margin-top:10px}
+.muted{color:var(--mute)}
+.small{font-size:13px}
+.err{color:var(--red);font-size:14px;margin-top:8px}
+.row{display:flex;align-items:center;gap:8px}
+.sp{flex:1;min-width:0}
+.btn{border:1px solid var(--line);background:var(--card);border-radius:10px;padding:8px 12px}
+.btn.pri{background:var(--acc);border-color:var(--acc);color:#fff;font-weight:600}
+.btn.del{color:var(--red)}
+.btn.sm{padding:4px 9px;font-size:13px;border-radius:8px}
+.btn.wide{width:100%;margin-top:10px}
+.link{border:0;background:none;color:var(--acc);padding:6px 0;font-size:14px}
+.icon{border:0;background:none;padding:6px 10px;font-size:18px;color:var(--mute)}
+.icon:disabled{opacity:.3}
+.cal{width:100%;border-collapse:separate;border-spacing:0 3px;table-layout:fixed}
+.cal th{font-size:11px;color:var(--mute);font-weight:600;padding:2px 0}
+.cal td{text-align:center;padding:6px 0;font-size:14px}
+.cal tr.wk{cursor:pointer}
+.cal tr.wk.sel td{background:var(--accs)}
+.cal tr.wk.sel td:first-child{border-radius:10px 0 0 10px}.cal tr.wk.sel td:last-child{border-radius:0 10px 10px 0}
+.cal td.out{color:var(--grey)}
+.cal td.today span{outline:2px solid var(--acc);border-radius:50%;padding:2px 5px}
+.kw{font-size:11px;font-weight:700;border-radius:8px;padding:5px 0;display:block;margin:0 3px;color:var(--mute);background:var(--chip)}
+.kw.open{background:var(--red);color:#fff}.kw.done{background:var(--green);color:#fff}
+.kdots{display:flex;justify-content:center;gap:3px;margin-top:3px}
+.kdots i{width:7px;height:7px;border-radius:50%;background:var(--grey)}
+.kdots i.open{background:var(--red)}.kdots i.done{background:var(--green)}
+.legend{display:flex;gap:14px;font-size:12px;color:var(--mute);margin-top:6px;flex-wrap:wrap}
+.legend span{display:flex;align-items:center;gap:5px}
+.ph{display:flex;align-items:center;gap:8px;margin-bottom:6px}
+.badge{font-size:11px;font-weight:700;border-radius:999px;padding:2px 8px;color:#fff}
+.badge.open{background:var(--red)}.badge.done{background:var(--green)}.badge.future{background:var(--grey)}
+.task{border-top:1px solid var(--line);padding:9px 0}
+.chk{width:28px;height:28px;border-radius:8px;border:2px solid var(--grey);background:none;flex:none;display:grid;place-items:center;font-size:16px;color:#fff;padding:0}
+.chk.on{background:var(--green);border-color:var(--green)}
+.done-t{text-decoration:line-through;color:var(--mute)}
+.days{display:flex;gap:5px;margin:7px 0 0 36px;flex-wrap:wrap}
+.days button{width:34px;height:30px;border-radius:7px;border:1.5px solid var(--grey);background:none;font-size:12px;padding:0}
+.days button.on{background:var(--green);border-color:var(--green);color:#fff}
+.sub{margin:5px 0 0 36px;display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+details{margin:5px 0 0 36px}
+summary{font-size:13px;color:var(--acc);cursor:pointer}
+details ul{margin:6px 0 0;padding-left:20px;font-size:14px}
+.tag{font-size:11px;font-weight:600;border-radius:999px;padding:2px 8px;background:var(--accs);color:var(--acc)}
+.tag.warn{background:transparent;border:1px solid var(--warn);color:var(--warn)}
+.bar{display:grid;grid-template-columns:84px 1fr 86px;align-items:center;gap:8px;margin:7px 0;font-size:14px}
+.bar .tr{height:14px;background:var(--chip);border-radius:7px;overflow:hidden}
+.bar .tr b{display:block;height:100%;border-radius:7px}
+.bar .v{text-align:right;font-variant-numeric:tabular-nums}
+.tw{overflow-x:auto}
+table.hist{border-collapse:collapse;width:100%;font-size:14px;font-variant-numeric:tabular-nums}
+table.hist th,table.hist td{padding:7px 8px;border-bottom:1px solid var(--line);text-align:right;white-space:nowrap}
+table.hist th:first-child,table.hist td:first-child{text-align:left}
+.ti{display:flex;align-items:center;gap:10px;border-top:1px solid var(--line);padding:10px 0}
+.ti:first-child{border-top:0}
+label.f{display:block;font-size:13px;color:var(--mute);margin:12px 0 4px}
+label.cb{display:flex;gap:8px;align-items:flex-start;margin-top:12px;font-size:14px}
+.inp{width:100%;border:1px solid var(--line);background:var(--bg);border-radius:10px;padding:9px 10px;font-size:16px}
+.steps .row{margin-bottom:6px}
+.code{font-size:26px;font-weight:700;letter-spacing:.12em;margin:8px 0;font-variant-numeric:tabular-nums}
+.swap-arrow{color:var(--mute);margin:0 4px}
+:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
+.hbtn{border:1px solid var(--line);background:var(--card);border-radius:50%;width:30px;height:30px;font-weight:700;color:var(--mute);flex:none;padding:0}
+.hright{display:flex;align-items:center;gap:10px;flex:none}
+.banner{background:var(--accs);color:var(--ink);border-radius:12px;padding:10px 12px;margin-bottom:10px;display:flex;align-items:center;gap:10px;font-size:14px}
+.seg{display:inline-flex;background:var(--chip);border-radius:10px;padding:3px;gap:3px}
+.seg button{border:0;background:none;border-radius:8px;padding:5px 12px;font-size:13px;font-weight:600;color:var(--mute)}
+.seg button.on{background:var(--card);color:var(--ink)}
+.money{font-variant-numeric:tabular-nums;font-weight:700}
+.money.neg{color:var(--red)}
+.chart{width:100%;height:auto;display:block;margin-top:8px}
+.chart text{font-size:10px;fill:var(--mute)}
+.log{font-size:13px;border-top:1px solid var(--line);padding:7px 0}
+.log:first-child{border-top:0}
+.tour{position:fixed;left:10px;right:10px;bottom:calc(10px + env(safe-area-inset-bottom,0px));z-index:50;max-width:520px;margin:0 auto;background:var(--card);border:1px solid var(--line);border-radius:16px;padding:14px 16px;box-shadow:0 8px 30px rgba(0,0,0,.25)}
+.tour h3{font-size:16px;margin-bottom:6px}
+.tour p{margin:0 0 12px;font-size:14px;line-height:1.5}
+.tour .cnt{font-size:12px;color:var(--mute)}
+.tour-hl{outline:3px solid var(--acc)!important;outline-offset:3px;border-radius:12px}
+.tour-pad{height:190px}
+.dlg-bg{position:fixed;inset:0;background:rgba(10,14,20,.45);z-index:100;display:flex;align-items:flex-end;justify-content:center;padding:12px 12px calc(12px + env(safe-area-inset-bottom,0px))}
+@media (min-width:600px){.dlg-bg{align-items:center}}
+.dlg{background:var(--card);border-radius:18px;padding:18px;width:100%;max-width:440px;box-shadow:0 10px 40px rgba(0,0,0,.3)}
+.dlg h3{font-size:17px;margin:0 0 8px}
+.dlg p{margin:0 0 4px;font-size:15px;line-height:1.5;color:var(--ink);white-space:normal}
+.dlg .choices{display:flex;flex-direction:column;gap:8px;margin-top:12px}
+.dlg .choices button{justify-content:flex-start;display:flex;align-items:center;gap:10px;padding:12px;font-size:16px}
+.btn.danger{background:var(--red);border-color:var(--red);color:#fff;font-weight:600}
+#toast{position:fixed;left:12px;right:12px;bottom:calc(14px + env(safe-area-inset-bottom,0px));z-index:90;max-width:480px;margin:0 auto;background:var(--ink);color:var(--bg);border-radius:12px;padding:10px 12px;display:flex;align-items:center;gap:10px;font-size:14px;transform:translateY(140%);transition:transform .2s ease;pointer-events:none}
+#toast.on{transform:none;pointer-events:auto}
+#toast .btn{background:transparent;color:var(--bg);border-color:var(--bg)}
+@media (prefers-reduced-motion:reduce){#toast{transition:none}}
+.mechip{border:1px solid var(--line);background:var(--card);border-radius:999px;padding:4px 10px;font-size:13px;display:flex;align-items:center;gap:6px;max-width:130px;white-space:nowrap;overflow:hidden}
+.overdue{border-color:var(--red)}
+@media (max-width:480px){.status span{display:none}}
+@media (prefers-reduced-motion:no-preference){.tour{animation:tin .2s ease-out}@keyframes tin{from{transform:translateY(12px);opacity:0}to{transform:none;opacity:1}}}
+</style>
+</head>
+<body>
+<div class="wrap">
+ <header><h1 id="ttl">Haushaltsplan</h1><div class="hright"><div id="st" class="status"><i></i><span>Verbinde…</span></div><button id="meBtn" class="mechip" data-a="pickMe" hidden></button><button class="hbtn" data-a="tour" aria-label="Führung durch die Funktionen">?</button></div></header>
+ <div id="app"><p class="muted">Lade…</p></div>
+</div>
+<div id="dlg" style="display:none"></div><div id="toast" role="status" aria-live="polite"></div>
+<script>
+const firebaseConfig={apiKey:"AIzaSyAySkjUJKdug-upeiQxYIjKnjcv_H6DKiM",authDomain:"haushalt-bf7a1.firebaseapp.com",projectId:"haushalt-bf7a1",storageBucket:"haushalt-bf7a1.firebasestorage.app",messagingSenderId:"119943513849",appId:"1:119943513849:web:d75866dde66e2b5610c428"};
+
+const INTERVALS=[['daily','täglich',1],['weekly','wöchentlich',1],['biweekly','alle 2 Wochen',2],['3weekly','alle 3 Wochen',3],['monthly','monatlich (alle 4 Wochen)',4],['quarterly','vierteljährlich (alle 13 Wochen)',13]];
+const IV={};INTERVALS.forEach(x=>IV[x[0]]={label:x[1],n:x[2]});
+const COLORS=['#2b5d8a','#c0563f','#2e8a5a','#8456b0','#c28a1e','#21918f','#b5487a','#5b6b7a'];
+const WD=['Mo','Di','Mi','Do','Fr','Sa','So'];
+const MONTHS=['Januar','Februar','März','April','Mai','Juni','Juli','August','September','Oktober','November','Dezember'];
+const DAY=864e5;
+const APP_VERSION='5.0';
+const DATA_VERSION=3;
+const CHANGELOG={'5.0':['Beim Start „Wer bist du?“: Die Seite zeigt zuerst deine Aufgaben','„Noch offen aus Vorwochen“ in der aktuellen Woche','Eigene Dialoge und „Rückgängig“ nach dem Abhaken','Vergangene Wochen bleiben fest, auch wenn der Plan geändert wird','Tauschangebote per WhatsApp, Signal & Co. teilen','Mitglieder verwalten, Einladungscode erneuern, Haushalt verlassen','Als App auf dem Home-Bildschirm installierbar'],'4.2':['Kalender-Export funktioniert jetzt auch auf Android','Erklärungen zum Kalender-Export und zur Anmeldung'],'4.1':['Kalender-Export: Aufgaben als Termine in den iPhone- oder Google-Kalender übernehmen','Hinweis zum Einladungscode auf der Anmeldeseite'],'4.0':['Geldkonto pro Person mit Stundenlohn je Aufgabe','Verdienst-Grafik nach Woche, Monat oder Jahr','Logbuch für Änderungen an Aufgaben und Personen','Führung durch die Funktionen (Fragezeichen oben)','Sicherung herunterladen und einspielen']};
+const eur=v=>(Math.round((+v||0)*100)/100).toLocaleString('de-DE',{style:'currency',currency:'EUR'});
+const r2=v=>Math.round(v*100)/100;
+const BAD=['Spiegel putzen','Waschbecken und Armatur reinigen','Toilette putzen','Dusche/Wanne reinigen','Boden wischen'];
+function T(id,name,min,iv,off,steps){return{id,name,min,iv,person:'',off,steps}}
+const TEMPLATE=[
+ T('bad','Bad putzen',30,'weekly',0,BAD.slice()),
+ T('kueche','Küche putzen',30,'weekly',0,['Arbeitsflächen abwischen','Herd und Spüle reinigen','Boden wischen']),
+ T('saugen','Staubsaugen',30,'weekly',0,[]),
+ T('wischen','Boden wischen',45,'biweekly',1,[]),
+ T('muell','Müll rausbringen',5,'weekly',0,[]),
+ T('waesche','Wäsche waschen',60,'weekly',0,[]),
+ T('pflanzen','Pflanzen gießen',10,'weekly',0,[])
+];
+
+firebase.initializeApp(firebaseConfig);
+const db=firebase.firestore(),auth=firebase.auth(),FV=firebase.firestore.FieldValue;
+let user=null,hid=null,mode='loading',unsubs=[],authMsg='',busy=false;
+let calOpen=false,calCfg={who:'',weeks:12,day:5,daily:false,alarm:true},migrating=false,payouts=[],logs=[],tour=null,newVer=null,period='month',whatsNew=null;
+let plan=null,checks={},swaps=[],assignCache=null,edit=null,tab='week',sel='all',me=null,curWeek=0,viewMonth=null,nameOf={};
+try{tab=localStorage.getItem('hh_tab')||'week';sel=localStorage.getItem('hh_sel')||'all'}catch(e){}
+function persist(){try{localStorage.setItem('hh_tab',tab);localStorage.setItem('hh_sel',sel);if(hid)localStorage.setItem('hh_me_'+hid,me||'')}catch(e){}}
+
+const $=s=>document.querySelector(s);
+const esc=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const rid=()=>Math.random().toString(36).slice(2,10);
+function parseD(s){const[y,m,d]=s.split('-').map(Number);return new Date(y,m-1,d)}
+function iso(d){return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')}
+function mondayOf(d){const x=new Date(d.getFullYear(),d.getMonth(),d.getDate());x.setDate(x.getDate()-((x.getDay()+6)%7));return x}
+function startMon(){return mondayOf(parseD(plan.start))}
+function weekIdx(d){return Math.round((mondayOf(d)-startMon())/(7*DAY))}
+function weekMon(i){const s=startMon();return new Date(s.getFullYear(),s.getMonth(),s.getDate()+7*i)}
+function wid(i){return 'w'+iso(weekMon(i)).replace(/-/g,'')}
+function widDate(w){return new Date(+w.slice(1,5),+w.slice(5,7)-1,+w.slice(7,9))}
+function widIdx(w){return weekIdx(widDate(w))}
+function isoWeek(d){const t=new Date(Date.UTC(d.getFullYear(),d.getMonth(),d.getDate()));const day=t.getUTCDay()||7;t.setUTCDate(t.getUTCDate()+4-day);const y=new Date(Date.UTC(t.getUTCFullYear(),0,1));return Math.ceil(((t-y)/DAY+1)/7)}
+function fmtMin(m){m=Math.round(m);if(m<60)return m+' Min';const h=Math.floor(m/60),r=m%60;return h+' Std'+(r?' '+r+' Min':'')}
+function fmtDate(d){return d.getDate()+'.'+(d.getMonth()+1)+'.'}
+function occLabel(w){const d=widDate(w);return 'KW '+isoWeek(d)+' ('+fmtDate(d)+')'}
+function person(id){return plan.people.find(p=>p.id===id)}
+function pcol(id){const p=person(id);return p?p.color:'var(--grey)'}
+function nowWeek(){return weekIdx(new Date())}
+function H(){return db.collection('households').doc(hid)}
+
+/* Verteilung */
+function due(t,i){if(i<0)return false;const n=(IV[t.iv]||IV.weekly).n;return(((i-(t.off||0))%n)+n)%n===0}
+function weekMin(t){return t.iv==='daily'?t.min*7:t.min}
+function baseAssign(i){
+ if(i<0||i>5200||!plan.people.length)return[];
+ const ppl=plan.people,ids=new Set(ppl.map(p=>p.id));
+ if(!assignCache){assignCache={weeks:[],load:{}};ppl.forEach(p=>assignCache.load[p.id]=0)}
+ const C=assignCache;
+ while(C.weeks.length<=i){
+  const w=C.weeks.length,fz=frozenList(wid(w));
+  if(fz){fz.forEach(x=>{if(C.load[x.p]!==undefined)C.load[x.p]+=weekMin(x.t)});C.weeks.push(fz);continue}
+  const list=[],tasks=plan.tasks.filter(t=>due(t,w));
+  tasks.forEach(t=>{if(t.person&&ids.has(t.person)){list.push({t,p:t.person});C.load[t.person]+=weekMin(t)}});
+  const pool=tasks.filter(t=>!(t.person&&ids.has(t.person))).sort((a,b)=>weekMin(b)-weekMin(a)||a.id.localeCompare(b.id));
+  pool.forEach(t=>{let best=null,bv=Infinity;for(let k=0;k<ppl.length;k++){const p=ppl[(k+w)%ppl.length].id;if(C.load[p]<bv-1e-9){bv=C.load[p];best=p}}list.push({t,p:best});C.load[best]+=weekMin(t)});
+  C.weeks.push(list);
+ }
+ return C.weeks[i];
+}
+function assign(i){
+ const o=plan.over||{},w=i>=0?wid(i):'',b=baseAssign(i);
+ if(b.length&&b[0].fz)return b;
+ return b.map(x=>{const p=o[w+'|'+x.t.id];return p&&person(p)?{t:x.t,p,sw:true}:x});
+}
+function keysFor(t){return t.iv==='daily'?[0,1,2,3,4,5,6].map(d=>t.id+'_'+d):[t.id]}
+function rec(i,k){const v=(checks[wid(i)]||{})[k];return v&&typeof v==='object'?v:null}
+function status(i,p){
+ const a=assign(i).filter(x=>x.p===p);if(!a.length)return null;
+ if(a.every(x=>keysFor(x.t).every(k=>rec(i,k))))return 'done';
+ return i>nowWeek()?'future':'open';
+}
+
+/* Tausch-Helfer */
+function openSwaps(){const nw=nowWeek();return swaps.filter(s=>s.status==='open'&&widIdx(s.w)>=nw)}
+function lockedSet(){const L=new Set();openSwaps().forEach(s=>{L.add(s.w+'|'+s.task);(s.offers||[]).forEach(o=>L.add(o.w+'|'+o.task))});return L}
+function occOwner(w,task){const x=assign(widIdx(w)).find(x=>x.t.id===task);return x?x.p:null}
+function occStarted(w,task){const t=plan.tasks.find(t=>t.id===task);return t?keysFor(t).some(k=>rec(widIdx(w),k)):true}
+function myOccurrences(exclude){
+ const nw=Math.max(0,nowWeek()),L=lockedSet(),out=[];
+ for(let i=nw;i<nw+52;i++){const w=wid(i);assign(i).forEach(x=>{
+  const key=w+'|'+x.t.id;if(x.p!==me||L.has(key)||key===exclude||keysFor(x.t).some(k=>rec(i,k)))return;
+  out.push({v:key,l:occLabel(w)+': '+x.t.name+', '+fmtMin(weekMin(x.t))});
+ })}
+ return out;
+}
+function swapTodo(){if(!me)return 0;return openSwaps().filter(s=>s.from===me&&(s.offers||[]).length).length}
+
+/* Speichern */
+function setStatus(c,txt){const s=$('#st');s.className='status '+c;s.querySelector('span').textContent=txt}
+function fail(e){console.error(e);setStatus('err','Speichern fehlgeschlagen');uiAlert('Speichern fehlgeschlagen: '+(e&&e.message||e),'Fehler')}
+function savePlan(){
+ assignCache=null;render();
+ H().update(JSON.parse(JSON.stringify({name:plan.name,people:plan.people,tasks:plan.tasks,start:plan.start}))).then(()=>setStatus('ok','Synchronisiert')).catch(fail);
+}
+function toggle(i,t,p,k){
+ const id=wid(i),on=!!rec(i,k);checks[id]=checks[id]||{};
+ let val;
+ if(on){delete checks[id][k];val=FV.delete()}
+ else{const pp=person(p)||{};val={p,pn:pp.name||'',m:t.min,n:t.name,t:iso(new Date())};if(pp.wallet&&+t.wage>0)val.e=r2(t.min/60*t.wage);checks[id][k]=val;const dk=k.split('_')[1];toast('Erledigt: '+t.name+(dk!==undefined?' ('+WD[+dk]+')':'')+(val.e?', +'+eur(val.e):''),'Rückgängig',()=>{if(rec(i,k))toggle(i,t,p,k)})}
+ render();
+ H().collection('checks').doc(id).set({[k]:val},{merge:true}).catch(fail);
+}
+
+/* Konto */
+const AUTH_ERR={'auth/invalid-credential':'E-Mail oder Passwort stimmt nicht.','auth/wrong-password':'E-Mail oder Passwort stimmt nicht.','auth/user-not-found':'Zu dieser E-Mail gibt es kein Konto.','auth/invalid-email':'Die E-Mail-Adresse ist ungültig.','auth/email-already-in-use':'Für diese E-Mail gibt es schon ein Konto. Melde dich an.','auth/weak-password':'Das Passwort braucht mindestens 6 Zeichen.','auth/too-many-requests':'Zu viele Versuche. Warte kurz und versuche es erneut.','auth/missing-password':'Bitte ein Passwort eingeben.','auth/operation-not-allowed':'Die Anmeldung per E-Mail ist in Firebase noch nicht aktiviert.','auth/network-request-failed':'Keine Internetverbindung.'};
+function authErr(e){return AUTH_ERR[e&&e.code]||(e&&e.message)||'Unbekannter Fehler'}
+function stopAll(){unsubs.forEach(u=>{try{u()}catch(e){}});unsubs=[]}
+auth.onAuthStateChanged(async u=>{
+ stopAll();user=u;plan=null;checks={};swaps=[];payouts=[];logs=[];tour=null;hid=null;edit=null;assignCache=null;
+ if(!u){mode='login';setStatus('','Abgemeldet');render();return}
+ mode='loading';render();
+ try{const s=await db.collection('users').doc(u.uid).get();hid=s.exists?s.data().hid:null}
+ catch(e){console.error(e);setStatus('err','Keine Verbindung zur Datenbank');authMsg='Die Datenbank lehnt den Zugriff ab. Sind die neuen Firestore-Regeln veröffentlicht?';mode='setup';render();return}
+ if(hid)startHousehold();else{mode='setup';render()}
+});
+function startHousehold(){
+ mode='loading';render();
+ try{me=localStorage.getItem('hh_me_'+hid)||null}catch(e){}
+ unsubs.push(H().onSnapshot({includeMetadataChanges:true},snap=>{
+  if(!snap.exists){authMsg='Dieser Haushalt existiert nicht mehr.';mode='setup';render();return}
+  const first=!plan;plan=snap.data();plan.people=plan.people||[];plan.tasks=plan.tasks||[];plan.over=plan.over||{};plan.start=plan.start||iso(mondayOf(new Date()));
+  assignCache=null;if(me&&!person(me))me=null;
+  if(!snap.metadata.fromCache&&!snap.metadata.hasPendingWrites&&(plan.dataVersion||1)<DATA_VERSION&&!migrating){migrating=true;migrate()}
+  if(first){mode='app';curWeek=nowWeek();const n=new Date();viewMonth=new Date(n.getFullYear(),n.getMonth(),1);afterFirstLoad()}
+  setStatus(snap.metadata.fromCache?'':'ok',snap.metadata.fromCache?'Offline':'Synchronisiert');
+  first?render():softRender();
+ },e=>{console.error(e);if(e&&e.code==='permission-denied'){db.collection('users').doc(user.uid).set({hid:null,email:user.email||''}).catch(()=>{});stopAll();plan=null;hid=null;authMsg='Du bist nicht mehr Mitglied dieses Haushalts. Lege einen neuen an oder tritt mit einem Code bei.';mode='setup';render()}else setStatus('err','Kein Zugriff auf den Haushalt')}));
+ unsubs.push(H().collection('checks').onSnapshot(qs=>{const c={};qs.forEach(d=>{c[d.id]=d.data()});checks=c;if(plan)softRender()},e=>console.error(e)));
+ unsubs.push(H().collection('swaps').onSnapshot(qs=>{swaps=qs.docs.map(d=>Object.assign({id:d.id},d.data()));if(plan)softRender()},e=>console.error(e)));
+ unsubs.push(H().collection('payouts').onSnapshot(qs=>{payouts=qs.docs.map(d=>Object.assign({id:d.id},d.data()));if(plan)softRender()},e=>console.error(e)));
+ unsubs.push(H().collection('log').orderBy('ts','desc').limit(100).onSnapshot(qs=>{logs=qs.docs.map(d=>d.data());if(plan)softRender()},e=>console.error(e)));
+}
+function genCode(){const A='ABCDEFGHJKLMNPQRSTUVWXYZ23456789';let s='';for(let i=0;i<8;i++)s+=A[Math.floor(Math.random()*A.length)];return s}
+async function createHousehold(name,importOld){
+ const ref=db.collection('households').doc(),code=genCode();
+ let data={name:name||'Unser Haushalt',code,members:[user.uid],start:iso(mondayOf(new Date())),people:[],tasks:JSON.parse(JSON.stringify(TEMPLATE)),over:{},frozen:{},memberInfo:{[user.uid]:user.email||''},created:iso(new Date()),dataVersion:DATA_VERSION};
+ let oldChecks=[];
+ if(importOld){
+  const o=await db.collection('config').doc('plan').get();
+  if(!o.exists)throw new Error('In der alten Version wurde kein Plan gefunden.');
+  const od=o.data();data.people=(od.people||[]).map(p=>Object.assign({wallet:false},p));data.tasks=(od.tasks||[]).map(t=>Object.assign({wage:0},t));data.start=od.start||data.start;
+  (await db.collection('checks').get()).forEach(d=>oldChecks.push([d.id,d.data()]));
+ }
+ const b=db.batch();
+ b.set(ref,data);b.set(db.collection('codes').doc(code),{hid:ref.id});b.set(db.collection('users').doc(user.uid),{hid:ref.id,email:user.email||''});
+ await b.commit();
+ if(oldChecks.length){const b2=db.batch();oldChecks.forEach(([id,v])=>b2.set(ref.collection('checks').doc(id),v));await b2.commit()}
+ hid=ref.id;tab='edit';persist();startHousehold();
+}
+async function joinHousehold(code){
+ code=code.trim().toUpperCase().replace(/\s/g,'');
+ const c=await db.collection('codes').doc(code).get();
+ if(!c.exists)throw new Error('Diesen Einladungscode gibt es nicht.');
+ const h=c.data().hid;
+ await db.collection('households').doc(h).update({members:FV.arrayUnion(user.uid),joinCode:code,['memberInfo.'+user.uid]:user.email||''});
+ await db.collection('users').doc(user.uid).set({hid:h,email:user.email||''});
+ hid=h;startHousehold();
+}
+
+/* Ansicht */
+function render(){
+ const app=$('#app');updateMe();$('#ttl').textContent=plan&&plan.name?plan.name:'Haushaltsplan';
+ if(mode==='loading'){app.innerHTML='<p class="muted">Lade…</p>';return}
+ if(mode==='login'){app.innerHTML=viewLogin();return}
+ if(mode==='setup'){app.innerHTML=viewSetup();return}
+ if(sel!=='all'&&!person(sel))sel='all';
+ const n=swapTodo();
+ let h=`<div class="tabs">${[['week','Woche'],['swap','Tausch'+(n?`<sup>${n}</sup>`:'')],['stats','Auswertung'],['edit','Bearbeiten']].map(([k,l])=>`<button data-a="tab" data-v="${k}" class="${tab===k?'on':''}">${l}</button>`).join('')}</div>`;
+ h+=tab==='week'?viewWeek():tab==='swap'?viewSwap():tab==='stats'?viewStats():viewEdit();
+ if(newVer)h=`<div class="banner"><span class="sp">Version ${esc(newVer)} ist verfügbar. Deine Daten bleiben erhalten.</span><button class="btn sm pri" data-a="reload">Neu laden</button></div>`+h;
+ app.innerHTML=h+tourHtml();
+ tourHighlight();
+}
+function softRender(){const a=document.activeElement;if(edit||(a&&/^(INPUT|SELECT|TEXTAREA)$/.test(a.tagName)&&!/^(checkbox|file|button)$/.test(a.type)))return;render()}
+function viewLogin(){
+ return `<h2>Anmelden</h2><div class="box">
+ <label class="f" for="em">E-Mail</label><input id="em" class="inp" type="email" autocomplete="username" inputmode="email">
+ <label class="f" for="pw">Passwort</label><input id="pw" class="inp" type="password" autocomplete="current-password">
+ <label class="cb" style="margin-top:8px;font-size:13px"><input type="checkbox" id="pwShow"> Passwort anzeigen</label>
+ ${authMsg?`<div class="err">${esc(authMsg)}</div>`:''}
+ <button class="btn pri wide" data-a="login" ${busy?'disabled':''}>Anmelden</button>
+ <button class="btn wide" data-a="signup" ${busy?'disabled':''}>Neues Konto erstellen</button>
+ <button class="link" data-a="reset">Passwort vergessen?</button></div>
+ <h2>So funktioniert die Anmeldung</h2><div class="box small">
+ <p style="margin:0 0 10px"><b>Euer Haushalt ist schon eingerichtet?</b><br><span class="muted">Gib die gemeinsamen Zugangsdaten eures Haushalts ein (E-Mail und Passwort) und tippe auf „Anmelden“. Die Daten bekommst du von der Person, die den Haushalt angelegt hat.</span></p>
+ <p style="margin:0 0 10px"><b>Du hast einen Einladungscode?</b><br><span class="muted">Der Code ist kein Passwort. Gib deine eigene E-Mail und ein neues Passwort ein (mindestens 6 Zeichen) und tippe auf „Neues Konto erstellen“. Auf der nächsten Seite trägst du den Code bei „Einem Haushalt beitreten“ ein.</span></p>
+ <p style="margin:0 0 10px"><b>Du willst einen neuen Haushalt gründen?</b><br><span class="muted">E-Mail und neues Passwort eingeben, „Neues Konto erstellen“ tippen und auf der nächsten Seite einen Namen für den Haushalt vergeben. Danach findest du unter Bearbeiten den Einladungscode und kannst die Zugangsdaten an alle weitergeben.</span></p>
+ <p style="margin:0"><b>Passwort vergessen?</b><br><span class="muted">E-Mail oben eintragen und auf „Passwort vergessen?“ tippen. Du bekommst eine E-Mail zum Zurücksetzen, schau auch im Spam-Ordner nach.</span></p></div>
+ `;
+}
+function viewSetup(){
+ return `<div class="box"><div class="muted small">Angemeldet als ${esc(user&&user.email)}</div>${authMsg?`<div class="err">${esc(authMsg)}</div>`:''}</div>
+ <h2>Neuen Haushalt anlegen</h2><div class="box">
+ <label class="f" for="hn">Name des Haushalts</label><input id="hn" class="inp" placeholder="z. B. Familie Klein oder WG Uhlandstraße" autocomplete="off">
+ <label class="cb"><input type="checkbox" id="imp"> <span>Plan und Häkchen aus der bisherigen Version übernehmen</span></label>
+ <button class="btn pri wide" data-a="create" ${busy?'disabled':''}>Haushalt anlegen</button></div>
+ <h2>Einem Haushalt beitreten</h2><div class="box">
+ <label class="f" for="jc">Einladungscode</label><input id="jc" class="inp" placeholder="8 Zeichen" autocomplete="off" autocapitalize="characters">
+ <button class="btn wide" data-a="join" ${busy?'disabled':''}>Beitreten</button></div>
+ <div style="margin-top:14px"><button class="btn del" data-a="logout">Abmelden</button></div>`;
+}
+function chips(){
+ return `<div class="chips"><button class="chip ${sel==='all'?'on':''}" data-a="sel" data-v="all">Alle</button>${plan.people.map(p=>`<button class="chip ${sel===p.id?'on':''}" data-a="sel" data-v="${p.id}"><span class="dot" style="background:${p.color}"></span>${esc(p.name)}</button>`).join('')}</div>`;
+}
+function viewWeek(){
+ if(!plan.people.length)return `<div class="box">Leg im Reiter <b>Bearbeiten</b> zuerst die Personen eures Haushalts an. Danach verteilt die Seite die Aufgaben automatisch.</div>`;
+ let h=chips();
+ const y=viewMonth.getFullYear(),m=viewMonth.getMonth(),first=new Date(y,m,1),last=new Date(y,m+1,0);
+ let d=mondayOf(first);const today=iso(new Date());
+ h+=`<div class="box"><div class="row"><button class="icon" data-a="mon" data-v="-1" aria-label="Vormonat">‹</button><h3 class="sp" style="text-align:center">${MONTHS[m]} ${y}</h3><button class="icon" data-a="mon" data-v="1" aria-label="Nächster Monat">›</button></div>`;
+ h+=`<table class="cal"><tr><th>KW</th>${WD.map(x=>`<th>${x}</th>`).join('')}</tr>`;
+ while(d<=last){
+  const i=weekIdx(d);let kw;
+  if(sel!=='all'){const s=status(i,sel);kw=`<span class="kw ${s||''}">${isoWeek(d)}</span>`}
+  else{kw=`<span class="kw">${isoWeek(d)}</span><span class="kdots">${plan.people.map(p=>{const s=status(i,p.id);return s?`<i class="${s}" title="${esc(p.name)}"></i>`:''}).join('')}</span>`}
+  h+=`<tr class="wk ${i===curWeek?'sel':''}" data-a="week" data-v="${i}"><td>${kw}</td>`;
+  for(let k=0;k<7;k++){const x=new Date(d.getFullYear(),d.getMonth(),d.getDate()+k);h+=`<td class="${x.getMonth()!==m?'out':''} ${iso(x)===today?'today':''}"><span>${x.getDate()}</span></td>`}
+  h+='</tr>';d=new Date(d.getFullYear(),d.getMonth(),d.getDate()+7);
+ }
+ h+=`</table><div class="legend"><span><i class="dot" style="background:var(--green)"></i>alles erledigt</span><span><i class="dot" style="background:var(--red)"></i>noch offen</span><span><i class="dot" style="background:var(--grey)"></i>kommt noch</span></div><div style="margin-top:10px"><button class="btn sm" data-a="calOpen">Im Kalender eintragen</button></div>${calOpen?viewCal():''}</div>`;
+ const i=curWeek,mon=weekMon(i),sun=new Date(mon.getFullYear(),mon.getMonth(),mon.getDate()+6),w=wid(i),nw=nowWeek(),L=lockedSet();
+ h+=`<div class="row" style="margin-top:16px"><button class="icon" data-a="wk" data-v="-1" aria-label="Vorwoche">‹</button><div class="sp" style="text-align:center"><b>KW ${isoWeek(mon)}</b> <span class="muted small">${fmtDate(mon)} – ${fmtDate(sun)}${sun.getFullYear()}</span></div><button class="icon" data-a="wk" data-v="1" aria-label="Nächste Woche">›</button></div>`;
+ if(i!==nw)h+=`<div style="text-align:center"><button class="btn small" data-a="today">Zur aktuellen Woche</button></div>`;
+ if(i<0){const s=parseD(plan.start);return h+`<div class="box muted">Der Plan startet am ${fmtDate(s)}${s.getFullYear()}.</div>`}
+ const a=assign(i),ppl=plan.people.filter(p=>sel==='all'||p.id===sel);
+ if(i===nw)h+=viewOverdue(ppl);
+ ppl.forEach(p=>{
+  const mine=a.filter(x=>x.p===p.id),s=status(i,p.id),tot=mine.reduce((n,x)=>n+weekMin(x.t),0);
+  h+=`<div class="box"><div class="ph"><span class="dot" style="background:${p.color}"></span><h3>${esc(p.name)}</h3><span class="muted small">${fmtMin(tot)}</span><span class="sp"></span>${s?`<span class="badge ${s}">${s==='done'?'erledigt':s==='open'?'offen':'kommt noch'}</span>`:''}</div>`;
+  if(!mine.length)h+=`<div class="muted small">Diese Woche nichts zu tun.</div>`;
+  mine.forEach(({t,sw})=>{
+   const daily=t.iv==='daily',ok=keysFor(t).every(k=>rec(i,k)),started=keysFor(t).some(k=>rec(i,k)),key=w+'|'+t.id;
+   h+=`<div class="task"><div class="row">`;
+   h+=daily?`<span class="chk ${ok?'on':''}" aria-hidden="true">${ok?'✓':''}</span>`:`<button class="chk ${ok?'on':''}" data-a="chk" data-w="${i}" data-t="${t.id}" data-p="${p.id}" data-k="${t.id}" aria-label="${esc(t.name)} erledigt">${ok?'✓':''}</button>`;
+   h+=`<span class="sp ${ok?'done-t':''}">${esc(t.name)}</span><span class="muted small">${daily?t.min+' Min/Tag':t.min+' Min'}</span></div>`;
+   if(daily)h+=`<div class="days">${WD.map((x,k)=>`<button class="${rec(i,t.id+'_'+k)?'on':''}" data-a="chk" data-w="${i}" data-t="${t.id}" data-p="${p.id}" data-k="${t.id}_${k}">${x}</button>`).join('')}</div>`;
+   let sub='';
+   if(sw)sub+=`<span class="tag">getauscht</span>`;
+   if(L.has(key))sub+=`<span class="tag warn">im Tausch</span>`;
+   else if(me===p.id&&!started&&i>=nw&&plan.people.length>1)sub+=`<button class="btn sm" data-a="swapOffer" data-w="${i}" data-t="${t.id}">Tauschen</button>`;
+   if(sub)h+=`<div class="sub">${sub}</div>`;
+   if(t.steps&&t.steps.length)h+=`<details><summary>Was ist zu tun?</summary><ul>${t.steps.map(x=>`<li>${esc(x)}</li>`).join('')}</ul></details>`;
+   h+=`</div>`;
+  });
+  h+=`</div>`;
+ });
+ if(!me&&plan.people.length>1)h+=`<p class="muted small">Zum Tauschen oben rechts einmal auswählen, wer du bist.</p>`;
+ return h;
+}
+function viewSwap(){
+ let h=`<div class="box"><div class="muted small">Auf diesem Gerät bist du:</div><div class="chips">${plan.people.map(p=>`<button class="chip ${me===p.id?'on':''}" data-a="me" data-v="${p.id}"><span class="dot" style="background:${p.color}"></span>${esc(p.name)}</button>`).join('')}</div></div>`;
+ if(!plan.people.length)return h;
+ if(!me)return h+`<p class="muted small">Wähle aus, wer du bist. Dann kannst du Aufgaben anbieten und auf Angebote antworten.</p>`;
+ const open=openSwaps().sort((a,b)=>a.w.localeCompare(b.w));
+ h+=`<h2>Offene Tauschangebote</h2>`;
+ if(!open.length)h+=`<div class="box muted small">Gerade bietet niemand etwas an. In der Wochenansicht kannst du bei deinen Aufgaben auf „Tauschen“ tippen.</div>`;
+ open.forEach(s=>{
+  const offers=s.offers||[];
+  h+=`<div class="box"><div class="ph"><span class="dot" style="background:${pcol(s.from)}"></span><b>${esc(pname(s.from))}</b><span class="muted small">bietet an</span></div>`;
+  h+=`<div><b>${esc(s.tname)}</b> <span class="muted small">${occLabel(s.w)}, ${fmtMin(s.min)}</span></div>`;
+  if(s.from===me){
+   if(!offers.length)h+=`<div class="muted small" style="margin-top:8px">Noch keine Gegenangebote.</div>`;
+   else h+=`<div style="margin-top:8px">`+offers.map(o=>`<div class="ti"><span class="dot" style="background:${pcol(o.by)}"></span><div class="sp"><b>${esc(pname(o.by))}</b> übernimmt deine Aufgabe und gibt dir: ${esc(o.tname)}<div class="muted small">${occLabel(o.w)}, ${fmtMin(o.min)}</div></div><button class="btn pri" data-a="swapAccept" data-s="${s.id}" data-o="${o.id}">Annehmen</button></div>`).join('')+`</div>`;
+   h+=`<div style="margin-top:10px"><button class="btn sm" data-a="swapShare" data-s="${s.id}">Im Messenger teilen</button> <button class="btn del sm" data-a="swapCancel" data-s="${s.id}">Angebot zurückziehen</button></div>`;
+  }else{
+   const mine=offers.find(o=>o.by===me);
+   if(offers.length&&!mine)h+=`<div class="muted small" style="margin-top:4px">${offers.length} Gegenangebot${offers.length>1?'e':''} von anderen</div>`;
+   if(mine)h+=`<div class="ti" style="margin-top:6px"><div class="sp">Dein Gegenangebot: ${esc(mine.tname)}<div class="muted small">${occLabel(mine.w)}, ${fmtMin(mine.min)}. Wartet auf Bestätigung.</div></div><button class="btn sm" data-a="swapUnoffer" data-s="${s.id}">Zurückziehen</button></div>`;
+   else{
+    const opts=myOccurrences(s.w+'|'+s.task);
+    if(!opts.length)h+=`<div class="muted small" style="margin-top:8px">Du hast gerade keine freie Aufgabe zum Anbieten.</div>`;
+    else h+=`<label class="f" for="o_${s.id}">Dafür biete ich an:</label><select id="o_${s.id}" class="inp">${groupOpts(opts)}</select><button class="btn pri wide" data-a="swapCounter" data-s="${s.id}">Gegenangebot senden</button>`;
+   }
+  }
+  h+=`</div>`;
+ });
+ const done=swaps.filter(s=>s.status==='done'&&s.acc).sort((a,b)=>String(b.done).localeCompare(String(a.done))).slice(0,10);
+ if(done.length){
+  h+=`<h2>Zuletzt getauscht</h2><div class="box">`+done.map(s=>`<div class="ti"><div class="sp"><b>${esc(pname(s.from))}</b><span class="swap-arrow">⇄</span><b>${esc(pname(s.acc.by))}</b><div class="muted small">${esc(s.tname)} (${occLabel(s.w)}) gegen ${esc(s.acc.tname)} (${occLabel(s.acc.w)})</div></div></div>`).join('')+`</div>`;
+ }
+ return h+`<p class="muted small">So funktioniert's: Du bietest eine Aufgabe an, andere machen ein Gegenangebot aus einer beliebigen künftigen Woche, du nimmst eins an. Erst dann wird getauscht.</p>`;
+}
+function pname(id){const p=person(id);return p?p.name:(nameOf[id]||'(entfernt)')}
+function bars(vals,ids){
+ const max=Math.max(1,...ids.map(id=>vals[id]||0));
+ return ids.map(id=>{const v=vals[id]||0;return `<div class="bar"><span>${esc(pname(id))}</span><span class="tr"><b style="width:${v/max*100}%;background:${pcol(id)}"></b></span><span class="v">${fmtMin(v)}</span></div>`}).join('');
+}
+function viewStats(){
+ const from=Math.max(0,nowWeek()),N=52,pl={};plan.people.forEach(p=>pl[p.id]=0);
+ for(let i=from;i<from+N;i++)assign(i).forEach(x=>{pl[x.p]+=weekMin(x.t)/N});
+ const avg=plan.people.length?Object.values(pl).reduce((a,b)=>a+b,0)/plan.people.length:0;
+ let h=`<h2>Geplante Arbeit</h2><div class="box"><div class="muted small">Durchschnitt pro Woche über die nächsten 52 Wochen, inklusive Tausche. Schnitt aller: ${fmtMin(avg)}</div>${bars(pl,plan.people.map(p=>p.id))}</div>`;
+ const tot={},mon={};nameOf={};
+ Object.values(checks).forEach(doc=>Object.values(doc||{}).forEach(v=>{
+  if(!v||typeof v!=='object'||!v.p)return;
+  const mm=+v.m||0,mk=String(v.t||'').slice(0,7);if(v.pn)nameOf[v.p]=v.pn;
+  tot[v.p]=(tot[v.p]||0)+mm;(mon[mk]=mon[mk]||{})[v.p]=(mon[mk][v.p]||0)+mm;
+ }));
+ const ids=plan.people.map(p=>p.id);Object.keys(tot).forEach(id=>{if(!ids.includes(id))ids.push(id)});
+ const now=new Date(),curKey=iso(now).slice(0,7);
+ h+=`<h2>Erledigt im ${MONTHS[now.getMonth()]}</h2><div class="box">${bars(mon[curKey]||{},ids)}</div>`;
+ h+=`<h2>Erledigt insgesamt</h2><div class="box">${bars(tot,ids)}</div>`;
+ const keys=Object.keys(mon).filter(Boolean).sort().reverse();
+ h+=`<h2>Monatsverlauf</h2><div class="box">`;
+ if(!keys.length)h+=`<div class="muted small">Sobald Aufgaben abgehakt werden, erscheint hier jeder Monat.</div>`;
+ else{
+  h+=`<div class="tw"><table class="hist"><tr><th>Monat</th>${ids.map(id=>`<th>${esc(pname(id))}</th>`).join('')}</tr>`;
+  keys.forEach(k=>{const[yy,mm]=k.split('-');h+=`<tr><td>${MONTHS[+mm-1]} ${yy}</td>${ids.map(id=>`<td>${mon[k][id]?fmtMin(mon[k][id]):'–'}</td>`).join('')}</tr>`});
+  h+=`</table></div>`;
+ }
+ h+=`</div><p class="muted small">Gezählt wird beim Abhaken: Die Minuten gehen an die zuständige Person, im Monat des Abhakens. Tägliche Aufgaben zählen pro Tag.</p>`;
+ return h+viewMoney();
+}
+function whoLabel(t){return t.person&&person(t.person)?`<span class="small">${esc(person(t.person).name)}</span>`:'<span class="tag">Pool</span>'}
+function viewEdit(){
+ if(edit)return viewEditor();
+ let h=`<h2>Aufgaben</h2><div class="box">`;
+ plan.tasks.forEach(t=>{h+=`<div class="ti"><div class="sp"><b>${esc(t.name)}</b><div class="muted small">${t.min} Min, ${(IV[t.iv]||IV.weekly).label}${+t.wage>0?', '+eur(t.wage)+'/Std':''}${t.steps&&t.steps.length?', '+t.steps.length+' Schritte':''}</div></div>${whoLabel(t)}<button class="btn" data-a="edit" data-v="${t.id}">Ändern</button></div>`});
+ if(!plan.tasks.length)h+=`<div class="muted">Noch keine Aufgaben. Leg die erste an.</div>`;
+ h+=`</div><div style="margin-top:10px"><button class="btn pri" data-a="new">Neue Aufgabe</button></div>`;
+ h+=`<h2>Personen</h2><div class="box">`;
+ plan.people.forEach(p=>{h+=`<div class="ti"><span class="dot" style="background:${p.color}"></span><div class="sp"><b>${esc(p.name)}</b><label class="cb" style="margin-top:4px;font-size:13px"><input type="checkbox" data-wallet="${p.id}" ${p.wallet?'checked':''}> Geldkonto</label></div><button class="btn sm" data-a="pren" data-v="${p.id}">Umbenennen</button><button class="btn sm del" data-a="pdel" data-v="${p.id}">Entfernen</button></div>`});
+ if(!plan.people.length)h+=`<div class="muted small">Noch niemand angelegt.</div>`;
+ h+=`<div class="row" style="margin-top:10px"><input id="pName" class="inp" placeholder="Name der neuen Person" autocomplete="off"><button class="btn pri" data-a="padd">Hinzufügen</button></div></div>`;
+ h+=`<h2>Haushalt</h2><div class="box"><label class="f" for="hName" style="margin-top:0">Name</label><input id="hName" class="inp" value="${esc(plan.name)}">`;
+ h+=`<label class="f" for="startIn">Planstart</label><input id="startIn" type="date" class="inp" value="${esc(plan.start)}"><div class="muted small" style="margin-top:4px">Woche 1 beginnt am Montag dieser Woche. Ab hier werden Pool-Aufgaben fair nach Minuten verteilt.</div></div>`;
+ h+=viewEditExtras();
+ h+=viewAccess();
+ return h;
+}
+function viewEditor(){
+ const t=edit;
+ let h=`<h2>${t._new?'Neue Aufgabe':'Aufgabe ändern'}</h2><div class="box">`;
+ h+=`<label class="f" for="fName" style="margin-top:0">Name</label><input id="fName" class="inp" value="${esc(t.name)}" autocomplete="off">`;
+ h+=`<label class="f" for="fMin">Dauer je Mal (Minuten)</label><input id="fMin" class="inp" type="number" inputmode="numeric" min="1" value="${t.min||''}">`;
+ h+=`<label class="f" for="fIv">Intervall</label><select id="fIv" class="inp">${INTERVALS.map(([k,l])=>`<option value="${k}" ${t.iv===k?'selected':''}>${l}</option>`).join('')}</select>`;
+ h+=`<label class="f" for="fWage">Stundenlohn in € (optional)</label><input id="fWage" class="inp" type="number" inputmode="decimal" min="0" step="0.5" value="${+t.wage>0?t.wage:''}" placeholder="leer = kein Lohn"><div class="muted small" style="margin-top:4px">Gutgeschrieben wird nur Personen mit aktivem Geldkonto: Minuten ÷ 60 × Stundenlohn.</div><label class="f" for="fWho">Zuständig</label><select id="fWho" class="inp"><option value="">Pool – fair auf alle verteilt</option>${plan.people.map(p=>`<option value="${p.id}" ${t.person===p.id?'selected':''}>Fest: ${esc(p.name)}</option>`).join('')}</select>`;
+ h+=`<label class="f">Was ist zu tun?</label><div class="steps">${t.steps.map((s,k)=>`<div class="row"><input class="inp step" data-i="${k}" value="${esc(s)}"><button class="icon" data-a="stepUp" data-v="${k}" aria-label="Nach oben" ${k?'':'disabled'}>↑</button><button class="icon" data-a="stepDel" data-v="${k}" aria-label="Schritt löschen">✕</button></div>`).join('')}</div>`;
+ h+=`<div class="row"><input id="fStep" class="inp" placeholder="Neuer Schritt, z. B. Spiegel putzen" autocomplete="off"><button class="btn" data-a="stepAdd">Hinzufügen</button></div>`;
+ h+=`<div class="row" style="margin-top:18px"><button class="btn pri" data-a="save">Speichern</button><button class="btn" data-a="cancel">Abbrechen</button><span class="sp"></span>${t._new?'':'<button class="btn del" data-a="del">Löschen</button>'}</div></div>`;
+ return h;
+}
+function readForm(){
+ if(!edit||!$('#fName'))return;
+ edit.name=$('#fName').value.trim();edit.min=+$('#fMin').value||0;edit.iv=$('#fIv').value;edit.person=$('#fWho').value;edit.wage=Math.max(0,+String($('#fWage').value).replace(',','.')||0);
+ document.querySelectorAll('.step').forEach(el=>{edit.steps[+el.dataset.i]=el.value});
+}
+function addStep(){readForm();const v=$('#fStep').value.trim();if(v){edit.steps.push(v);render();setTimeout(()=>{const f=$('#fStep');if(f)f.focus()},0)}}
+
+/* Aktionen */
+async function run(fn){if(busy)return;busy=true;authMsg='';render();try{await fn()}catch(e){console.error(e);authMsg=e&&e.code?authErr(e):(e&&e.message)||String(e)}busy=false;render()}
+document.addEventListener('click',async e=>{
+ const el=e.target.closest('[data-a]');if(!el||el.disabled)return;
+ const a=el.dataset.a,v=el.dataset.v;
+ if(a==='reload'){location.reload();return}
+ if(a==='tour'){if(plan&&mode==='app'){tour=0;tourGo()}return}
+ if(a==='tourNext'){tour++;tourGo();return}
+ if(a==='tourBack'){tour=Math.max(0,tour-1);tourGo();return}
+ if(a==='tourEnd'){tour=null;whatsNew=null;try{localStorage.setItem('hh_tour','1')}catch(e){}render();return}
+ if(a==='wnClose'){whatsNew=null;tour=null;render();return}
+ // Konto
+ if(a==='login'){const em=$('#em').value.trim(),pw=$('#pw').value;return run(()=>auth.signInWithEmailAndPassword(em,pw))}
+ if(a==='signup'){const em=$('#em').value.trim(),pw=$('#pw').value;return run(()=>auth.createUserWithEmailAndPassword(em,pw))}
+ if(a==='reset'){const em=$('#em').value.trim();if(!em){authMsg='Gib oben deine E-Mail ein, dann tippe erneut auf „Passwort vergessen?“.';return render()}return run(async()=>{await auth.sendPasswordResetEmail(em);uiAlert('Wir haben dir eine E-Mail zum Zurücksetzen geschickt. Schau auch im Spam-Ordner nach.')})}
+ if(a==='logout'){if(await uiConfirm('Möchtest du dich auf diesem Gerät abmelden?','Abmelden'))auth.signOut();return}
+ if(a==='create'){const nm=$('#hn').value.trim(),imp=$('#imp').checked;return run(()=>createHousehold(nm,imp))}
+ if(a==='join'){const c=$('#jc').value;if(!c.trim()){authMsg='Bitte den Einladungscode eingeben.';return render()}return run(()=>joinHousehold(c))}
+ if(!plan)return;
+ if(a==='tab'){if(edit&&v!=='edit')edit=null;tab=v;persist();render();window.scrollTo(0,0)}
+ else if(a==='sel'){sel=v;persist();render()}
+ else if(a==='me'){me=v;persist();render()}
+ else if(a==='mon'){viewMonth=new Date(viewMonth.getFullYear(),viewMonth.getMonth()+(+v),1);render()}
+ else if(a==='week'){curWeek=+v;render()}
+ else if(a==='wk'){curWeek+=+v;const mo=weekMon(curWeek);viewMonth=new Date(mo.getFullYear(),mo.getMonth(),1);render()}
+ else if(a==='today'){curWeek=nowWeek();const n=new Date();viewMonth=new Date(n.getFullYear(),n.getMonth(),1);render()}
+ else if(a==='chk'){const t=plan.tasks.find(x=>x.id===el.dataset.t);if(t)toggle(+el.dataset.w,t,el.dataset.p,el.dataset.k)}
+ // Tausch
+ else if(a==='swapOffer'){
+  const i=+el.dataset.w,t=plan.tasks.find(x=>x.id===el.dataset.t);if(!t)return;const w=wid(i);
+  if(!await uiConfirm('„'+t.name+'“ in '+occLabel(w)+' zum Tausch anbieten? Die anderen können dir dafür eine ihrer Aufgaben anbieten.','Anbieten'))return;
+  H().collection('swaps').add({from:me,w,task:t.id,tname:t.name,min:weekMin(t),status:'open',offers:[],created:iso(new Date())}).then(()=>{tab='swap';persist();render();toast('Tauschangebot erstellt','Bescheid geben',()=>shareMsg(msgOffer(me,t.name,w)))}).catch(fail);
+ }
+ else if(a==='swapCounter'){
+  const s=swaps.find(x=>x.id===el.dataset.s),selEl=$('#o_'+el.dataset.s);if(!s||!selEl)return;
+  const[w,task]=selEl.value.split('|'),t=plan.tasks.find(x=>x.id===task);if(!t)return;
+  H().collection('swaps').doc(s.id).update({offers:FV.arrayUnion({id:rid(),by:me,w,task,tname:t.name,min:weekMin(t)})}).then(()=>toast('Gegenangebot gesendet','Bescheid geben',()=>shareMsg('↩️ '+pname(me)+' bietet '+pname(s.from)+' für „'+s.tname+'“ ('+occLabel(s.w)+') an: „'+t.name+'“ ('+occLabel(w)+'). Bitte in der Haushalts-App bestätigen:'))).catch(fail);
+ }
+ else if(a==='swapUnoffer'){const s=swaps.find(x=>x.id===el.dataset.s);if(s)H().collection('swaps').doc(s.id).update({offers:(s.offers||[]).filter(o=>o.by!==me)}).catch(fail)}
+ else if(a==='swapShare'){const s=swaps.find(x=>x.id===el.dataset.s);if(s)shareMsg(msgOffer(s.from,s.tname,s.w))}
+ else if(a==='swapCancel'){if(await uiConfirm('Tauschangebot zurückziehen?','Zurückziehen',true))H().collection('swaps').doc(el.dataset.s).update({status:'cancelled'}).catch(fail)}
+ else if(a==='swapAccept'){
+  const s=swaps.find(x=>x.id===el.dataset.s),o=s&&(s.offers||[]).find(x=>x.id===el.dataset.o);if(!s||!o)return;
+  if(occOwner(s.w,s.task)!==s.from||occOwner(o.w,o.task)!==o.by||occStarted(s.w,s.task)||occStarted(o.w,o.task)){uiAlert('Dieser Tausch passt nicht mehr, weil sich der Plan geändert hat oder schon etwas abgehakt wurde. Zieh das Angebot zurück und biete neu an.');return}
+  if(!await uiConfirm('Du machst: '+o.tname+' ('+occLabel(o.w)+')\n'+pname(o.by)+' macht: '+s.tname+' ('+occLabel(s.w)+')','Tauschen',false,'Tausch bestätigen'))return;
+  const FP=firebase.firestore.FieldPath,b=db.batch();
+  b.update(H(),new FP('over',s.w+'|'+s.task),o.by,new FP('over',o.w+'|'+o.task),s.from);
+  b.update(H().collection('swaps').doc(s.id),{status:'done',acc:o,done:iso(new Date())});
+  b.commit().then(()=>toast('Getauscht','Bescheid geben',()=>shareMsg('✅ Getauscht: '+pname(s.from)+' macht „'+o.tname+'“ ('+occLabel(o.w)+'), '+pname(o.by)+' macht „'+s.tname+'“ ('+occLabel(s.w)+').'))).catch(fail);
+ }
+ // Bearbeiten
+ else if(a==='new'){edit={_new:true,id:'t'+Date.now().toString(36),name:'',min:15,iv:'weekly',person:'',off:0,steps:[]};render();window.scrollTo(0,0)}
+ else if(a==='edit'){const t=plan.tasks.find(x=>x.id===v);if(t){edit=JSON.parse(JSON.stringify(t));edit.steps=edit.steps||[];render();window.scrollTo(0,0)}}
+ else if(a==='cancel'){edit=null;render()}
+ else if(a==='stepAdd')addStep();
+ else if(a==='stepDel'){readForm();edit.steps.splice(+v,1);render()}
+ else if(a==='stepUp'){readForm();const k=+v;[edit.steps[k-1],edit.steps[k]]=[edit.steps[k],edit.steps[k-1]];render()}
+ else if(a==='save'){
+  readForm();if(!edit.name){uiAlert('Bitte gib der Aufgabe einen Namen.');return}if(!(edit.min>0)){uiAlert('Bitte trag eine Dauer in Minuten ein.');return}
+  ensureFrozen();
+  const n=(IV[edit.iv]||IV.weekly).n;
+  const t={id:edit.id,name:edit.name,min:edit.min,iv:edit.iv,person:edit.person,wage:edit.wage||0,off:edit._new?Math.floor(Math.random()*n):(edit.off||0)%n,steps:edit.steps.map(s=>s.trim()).filter(Boolean)};
+  const k=plan.tasks.findIndex(x=>x.id===t.id);if(k>=0){const d=taskDiff(plan.tasks[k],t);if(d)logEntry('Aufgabe geändert',t.name,d);plan.tasks[k]=t}else{plan.tasks.push(t);logEntry('Aufgabe angelegt',t.name,taskSummary(t))}
+  edit=null;savePlan();
+ }
+ else if(a==='del'){if(await uiConfirm('Aufgabe „'+edit.name+'“ löschen? Bereits erledigte Minuten und vergangene Wochen bleiben erhalten.','Löschen',true)){ensureFrozen();logEntry('Aufgabe gelöscht',edit.name,'');plan.tasks=plan.tasks.filter(x=>x.id!==edit.id);edit=null;savePlan()}}
+ else if(a==='padd'){
+  const nm=$('#pName').value.trim();if(!nm)return;ensureFrozen();
+  const used=plan.people.map(p=>p.color),color=COLORS.find(c=>!used.includes(c))||COLORS[plan.people.length%COLORS.length];
+  plan.people.push({id:'p'+Date.now().toString(36),name:nm,color,wallet:false});logEntry('Person hinzugefügt',nm,'');savePlan();
+ }
+ else if(a==='pren'){const p=person(v);const nm=await uiPrompt('Neuer Name für '+p.name,p.name);if(nm&&nm.trim()&&nm.trim()!==p.name){logEntry('Person umbenannt',nm.trim(),'vorher '+p.name);p.name=nm.trim();savePlan()}}
+ else if(a==='pdel'){
+  const p=person(v),fix=plan.tasks.filter(t=>t.person===v);
+  if(await uiConfirm(p.name+' entfernen?'+(fix.length?'\n'+fix.length+' feste Aufgabe(n) kommen in den Pool.':'')+'\nErledigte Minuten und vergangene Wochen bleiben erhalten.','Entfernen',true)){ensureFrozen();
+   logEntry('Person entfernt',p.name,fix.length?fix.length+' feste Aufgabe(n) in den Pool':'');fix.forEach(t=>{t.person=''});plan.people=plan.people.filter(x=>x.id!==v);if(sel===v)sel='all';if(me===v)me=null;persist();savePlan();
+  }
+ }
+ else if(a==='period'){period=v;render()}
+ else if(a==='pickMe')askMe();
+ else if(a==='memRemove'){const em=(plan.memberInfo||{})[v]||'dieses Konto';if(await uiConfirm(em+' aus dem Haushalt entfernen? Das Konto verliert sofort den Zugriff.','Entfernen',true)){H().update({members:FV.arrayRemove(v),['memberInfo.'+v]:FV.delete()}).then(()=>{logEntry('Mitglied entfernt',em,'');toast('Mitglied entfernt')}).catch(fail)}}
+ else if(a==='leave'){const last=(plan.members||[]).length<=1;if(await uiConfirm(last?'Du bist das einzige Konto in diesem Haushalt. Nach dem Verlassen ist er für niemanden mehr erreichbar.':'Diesen Haushalt verlassen? Du kannst später mit dem Einladungscode wieder beitreten.','Verlassen',true)){const old=hid;try{await H().update({members:FV.arrayRemove(user.uid),['memberInfo.'+user.uid]:FV.delete()});await db.collection('users').doc(user.uid).set({hid:null,email:user.email||''});stopAll();plan=null;hid=null;authMsg='';mode='setup';render()}catch(err){fail(err)}}}
+ else if(a==='renewCode'){if(await uiConfirm('Neuen Einladungscode erzeugen? Der alte Code funktioniert danach nicht mehr. Bereits beigetretene Konten bleiben drin.','Erneuern')){const nc=genCode(),oc=plan.code,b=db.batch();b.set(db.collection('codes').doc(nc),{hid});b.update(H(),{code:nc});if(oc)b.delete(db.collection('codes').doc(oc));b.commit().then(()=>{logEntry('Einladungscode erneuert','','');toast('Neuer Code: '+nc)}).catch(fail)}}
+ else if(a==='payout'){
+  const p=person(v),b=r2(balance(v));if(!p)return;
+  if(b===0){uiAlert('Das Konto von '+p.name+' steht bereits auf 0.');return}
+  if(!await uiConfirm(p.name+' wurde '+eur(b)+' ausbezahlt? Das Konto wird auf 0 gesetzt.','Ausbezahlt'))return;
+  H().collection('payouts').add({p:v,pn:p.name,amount:b,date:iso(new Date()),ts:Date.now()}).catch(fail);
+  logEntry('Auszahlung',p.name,eur(b));
+ }
+ else if(a==='export')exportBackup();
+ else if(a==='calOpen'){calOpen=!calOpen;if(!calCfg.who)calCfg.who=me||'all';render()}
+ else if(a==='calGo'){readCal();exportIcs()}
+ else if(a==='import'){const f=$('#importFile');if(f)f.click()}
+ else if(a==='copyCode'){const c=plan.code;(navigator.clipboard?navigator.clipboard.writeText(c):Promise.reject()).then(()=>toast('Code kopiert: '+c)).catch(()=>uiAlert(c,'Einladungscode'))}
+});
+document.addEventListener('keydown',e=>{
+ if(e.key==='Escape'&&dlgResolve){dlgClose(false);return}
+ if(e.key!=='Enter')return;
+ const id=e.target.id;
+ if(id==='dlgIn'){e.preventDefault();dlgClose(e.target.value);return}
+ if(id==='fStep'){e.preventDefault();addStep()}
+ else if(id==='pName'){e.preventDefault();$('[data-a="padd"]').click()}
+ else if(id==='pw'||id==='em'){e.preventDefault();$('[data-a="login"]').click()}
+ else if(id==='jc'){e.preventDefault();$('[data-a="join"]').click()}
+});
+document.addEventListener('change',e=>{
+ if(e.target.id==='pwShow'){const p=$('#pw');if(p)p.type=e.target.checked?'text':'password';return}
+ if(!plan)return;
+ if(['cWho','cWeeks','cDay','cDaily','cAlarm'].includes(e.target.id)){readCal();return}
+ if(e.target.id==='startIn'&&e.target.value){ensureFrozen();logEntry('Planstart geändert',e.target.value,'vorher '+plan.start);plan.start=e.target.value;assignCache=null;curWeek=nowWeek();savePlan()}
+ if(e.target.dataset&&e.target.dataset.wallet){const p=person(e.target.dataset.wallet);if(p){p.wallet=e.target.checked;logEntry('Geldkonto '+(p.wallet?'aktiviert':'deaktiviert'),p.name,'');savePlan()}}
+ if(e.target.id==='importFile'&&e.target.files[0])importBackup(e.target.files[0]);
+ if(e.target.id==='hName'){const v=e.target.value.trim();if(v){plan.name=v;savePlan()}}
+});
+/* Version und Migration */
+function migrate(){
+ const upd={dataVersion:DATA_VERSION,people:plan.people.map(p=>Object.assign({wallet:false},p)),tasks:plan.tasks.map(t=>Object.assign({wage:0},t))};
+ if(!plan.frozen)upd.frozen={};
+ if(!plan.memberInfo)upd.memberInfo={[user.uid]:user.email||''};
+ H().update(JSON.parse(JSON.stringify(upd))).then(()=>logEntry('Datenstand aktualisiert','Version '+DATA_VERSION,'automatisch beim Update der Seite')).catch(e=>console.error(e));
+}
+function afterFirstLoad(){
+ let seenTour=null,seenVer=null;try{seenTour=localStorage.getItem('hh_tour');seenVer=localStorage.getItem('hh_ver')}catch(e){}
+ try{localStorage.setItem('hh_ver',APP_VERSION)}catch(e){}
+ if(!seenTour)tour=-1;
+ else if(seenVer&&seenVer!==APP_VERSION&&CHANGELOG[APP_VERSION])whatsNew=APP_VERSION;
+ if(/tausch/.test(location.hash)){tab='swap';persist();try{history.replaceState(null,'',location.pathname)}catch(e){}}
+ if(me&&sel==='all')sel=me;
+ setTimeout(()=>{
+  if(plan.memberInfo&&plan.memberInfo[user.uid]!==(user.email||''))H().update(new firebase.firestore.FieldPath('memberInfo',user.uid),user.email||'').catch(()=>{});
+  ensureFrozen();
+  if(!me&&plan.people.length)askMe();
+ },300);
+}
+async function checkVersion(){
+ try{const r=await fetch(location.href.split('#')[0].split('?')[0]+'?v='+Date.now(),{cache:'no-store'});const t=await r.text();const m=t.match(/APP_VERSION='([^']+)'/);
+  if(m&&m[1]!==APP_VERSION&&m[1]!==newVer){newVer=m[1];if(mode==='app')softRender()}}catch(e){}
+}
+document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')checkVersion()});
+setTimeout(checkVersion,4000);setInterval(checkVersion,30*60*1000);
+
+/* Logbuch */
+function logEntry(act,what,detail){
+ if(!hid)return;const by=me&&person(me)?person(me).name:'';
+ H().collection('log').add({ts:Date.now(),d:new Date().toISOString(),by,act,what:what||'',detail:detail||''}).catch(e=>console.error(e));
+}
+function taskSummary(t){return t.min+' Min, '+(IV[t.iv]||IV.weekly).label+', '+(t.person&&person(t.person)?'fest: '+person(t.person).name:'Pool')+(+t.wage>0?', '+eur(t.wage)+'/Std':'')}
+function taskDiff(a,b){
+ const d=[],who=t=>t.person&&person(t.person)?person(t.person).name:'Pool';
+ if(a.name!==b.name)d.push('Name: '+a.name+' → '+b.name);
+ if(+a.min!==+b.min)d.push('Dauer: '+a.min+' → '+b.min+' Min');
+ if(a.iv!==b.iv)d.push('Intervall: '+(IV[a.iv]||IV.weekly).label+' → '+(IV[b.iv]||IV.weekly).label);
+ if((a.person||'')!==(b.person||''))d.push('Zuständig: '+who(a)+' → '+who(b));
+ if((+a.wage||0)!==(+b.wage||0))d.push('Stundenlohn: '+eur(a.wage)+' → '+eur(b.wage));
+ if(JSON.stringify(a.steps||[])!==JSON.stringify(b.steps||[]))d.push('Schritte geändert ('+(a.steps||[]).length+' → '+(b.steps||[]).length+')');
+ return d.join('; ');
+}
+function fmtTs(ts){const d=new Date(ts);return d.getDate()+'.'+(d.getMonth()+1)+'.'+d.getFullYear()+', '+String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0')}
+
+/* Geld */
+function earningsList(){const out=[];Object.values(checks).forEach(doc=>Object.values(doc||{}).forEach(v=>{if(v&&typeof v==='object'&&v.p&&+v.e>0)out.push(v)}));return out}
+function balance(pid){let b=0;earningsList().forEach(v=>{if(v.p===pid)b+=+v.e});payouts.forEach(x=>{if(x.p===pid)b-=+x.amount});return b}
+function periodKeys(){
+ const now=new Date(),keys=[];
+ if(period==='week'){let m=mondayOf(now);for(let k=11;k>=0;k--){const d=new Date(m.getFullYear(),m.getMonth(),m.getDate()-7*k);keys.push({k:iso(d),l:'KW'+isoWeek(d)})}}
+ else if(period==='month'){for(let k=11;k>=0;k--){const d=new Date(now.getFullYear(),now.getMonth()-k,1);keys.push({k:iso(d).slice(0,7),l:MONTHS[d.getMonth()].slice(0,3)})}}
+ else{for(let k=4;k>=0;k--){const y=now.getFullYear()-k;keys.push({k:String(y),l:String(y)})}}
+ return keys;
+}
+function keyOf(t){if(!t)return '';if(period==='week')return iso(mondayOf(parseD(t)));if(period==='month')return t.slice(0,7);return t.slice(0,4)}
+function chartSvg(keys,data,ids){
+ const W=340,Hh=170,pl=34,pb=22,pt=8,cw=(W-pl-6)/keys.length,bw=Math.max(6,cw*0.62);
+ const tots=keys.map(k=>ids.reduce((s,id)=>s+((data[k.k]||{})[id]||0),0)),max=Math.max(1,...tots);
+ const step=[1,2,5,10,20,25,50,100,200,250,500,1000].find(s=>max/s<=4)||Math.ceil(max/4);const top=Math.ceil(max/step)*step;
+ let g='';for(let v=0;v<=top+1e-9;v+=step){const y=pt+(Hh-pt-pb)*(1-v/top);g+=`<line x1="${pl}" x2="${W}" y1="${y}" y2="${y}" stroke="var(--line)"/><text x="${pl-4}" y="${y+3}" text-anchor="end">${v} €</text>`}
+ keys.forEach((k,i)=>{let y0=Hh-pb;const x=pl+i*cw+(cw-bw)/2;
+  ids.forEach(id=>{const v=(data[k.k]||{})[id]||0;if(!v)return;const h=(Hh-pt-pb)*v/top;y0-=h;g+=`<rect x="${x}" y="${y0}" width="${bw}" height="${h}" rx="2" fill="${pcol(id)}"><title>${esc(pname(id))}: ${eur(v)}</title></rect>`});
+  g+=`<text x="${x+bw/2}" y="${Hh-6}" text-anchor="middle">${esc(k.l)}</text>`});
+ return `<svg class="chart" viewBox="0 0 ${W} ${Hh}" role="img" aria-label="Verdienst je Zeitraum">${g}</svg>`;
+}
+function viewMoney(){
+ const wal=plan.people.filter(p=>p.wallet),el=earningsList();
+ let h=`<h2>Geldkonten</h2>`;
+ if(!wal.length&&!el.length)return h+`<div class="box muted small">Noch kein Geldkonto aktiv. Unter <b>Bearbeiten</b> kannst du bei einer Person „Geldkonto“ anhaken und bei Aufgaben einen Stundenlohn eintragen.</div>`;
+ h+=`<div class="box">`+wal.map(p=>{const b=balance(p.id);return `<div class="ti"><span class="dot" style="background:${p.color}"></span><b class="sp">${esc(p.name)}</b><span class="money ${b<0?'neg':''}">${eur(b)}</span><button class="btn sm" data-a="payout" data-v="${p.id}">Ausbezahlt</button></div>`}).join('')+(wal.length?'':'<div class="muted small">Kein Geldkonto aktiv.</div>')+`</div>`;
+ const keys=periodKeys(),data={},ids=[];
+ el.forEach(v=>{const k=keyOf(v.t);(data[k]=data[k]||{})[v.p]=((data[k]||{})[v.p]||0)+(+v.e);if(!ids.includes(v.p))ids.push(v.p)});
+ ids.sort((a,b)=>plan.people.findIndex(p=>p.id===a)-plan.people.findIndex(p=>p.id===b));
+ const sum={};keys.forEach(k=>ids.forEach(id=>{sum[id]=(sum[id]||0)+((data[k.k]||{})[id]||0)}));
+ h+=`<h2>Verdienst</h2><div class="box"><div class="seg">${[['week','Wöchentlich'],['month','Monatlich'],['year','Jährlich']].map(([k,l])=>`<button data-a="period" data-v="${k}" class="${period===k?'on':''}">${l}</button>`).join('')}</div>`;
+ if(!ids.length)h+=`<div class="muted small" style="margin-top:10px">Noch nichts verdient. Sobald jemand mit Geldkonto eine bezahlte Aufgabe abhakt, erscheint hier die Grafik.</div>`;
+ else{h+=chartSvg(keys,data,ids);h+=`<div class="legend">${ids.map(id=>`<span><i class="dot" style="background:${pcol(id)}"></i>${esc(pname(id))}: ${eur(sum[id])}</span>`).join('')}</div><div class="muted small" style="margin-top:6px">Summe im angezeigten Zeitraum (${period==='week'?'12 Wochen':period==='month'?'12 Monate':'5 Jahre'}).</div>`}
+ h+=`</div>`;
+ const pays=payouts.slice().sort((a,b)=>(b.ts||0)-(a.ts||0)).slice(0,10);
+ if(pays.length)h+=`<h2>Auszahlungen</h2><div class="box">`+pays.map(x=>`<div class="ti"><span class="dot" style="background:${pcol(x.p)}"></span><span class="sp">${esc(person(x.p)?person(x.p).name:x.pn)}</span><span class="muted small">${esc(x.date.split('-').reverse().join('.'))}</span><span class="money">${eur(x.amount)}</span></div>`).join('')+`</div>`;
+ return h;
+}
+
+/* Bearbeiten: Logbuch, Version, Sicherung, Führung */
+function viewEditExtras(){
+ let h=`<h2>Logbuch</h2><div class="box">`;
+ if(!logs.length)h+=`<div class="muted small">Noch keine Änderungen protokolliert.</div>`;
+ h+=logs.slice(0,30).map(l=>`<div class="log"><b>${esc(l.act)}</b>: ${esc(l.what)}${l.detail?`<div class="muted">${esc(l.detail)}</div>`:''}<div class="muted">${fmtTs(l.ts)}${l.by?', von '+esc(l.by):''}</div></div>`).join('');
+ h+=`</div>`;
+ h+=`<h2>Version und Sicherung</h2><div class="box"><div class="small">App-Version ${APP_VERSION}, Datenstand ${plan.dataVersion||1}</div><div class="muted small" style="margin-top:6px">Alle Daten liegen in der Datenbank, nicht in der Seite. Eine neue Version der Seite ändert daran nichts; nötige Anpassungen passieren automatisch. Zur Sicherheit kannst du jederzeit eine Sicherung herunterladen.</div>
+ <div class="row" style="margin-top:10px;flex-wrap:wrap"><button class="btn" data-a="export">Sicherung herunterladen</button><button class="btn" data-a="import">Sicherung einspielen</button><input type="file" id="importFile" accept="application/json,.json" style="display:none"></div></div>`;
+ h+=`<h2>Hilfe</h2><div class="box"><button class="btn" data-a="tour">Führung starten</button></div>`;
+ return h;
+}
+async function exportBackup(){
+ const data={app:'haushaltsplan',appVersion:APP_VERSION,dataVersion:plan.dataVersion||1,exported:new Date().toISOString(),
+  household:{name:plan.name,start:plan.start,people:plan.people,tasks:plan.tasks,over:plan.over||{}},checks,payouts:payouts.map(({id,...x})=>x),swaps:swaps.map(({id,...x})=>x)};
+ const blob=new Blob([JSON.stringify(data,null,1)],{type:'application/json'}),a=document.createElement('a');
+ a.href=URL.createObjectURL(blob);a.download='haushalt-sicherung-'+iso(new Date())+'.json';document.body.appendChild(a);a.click();
+ setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},2000);
+}
+async function importBackup(file){
+ try{
+  const d=JSON.parse(await file.text());
+  if(d.app!=='haushaltsplan'||!d.household)throw new Error('Das ist keine Sicherung dieser Seite.');
+  if(!await uiConfirm('Sicherung vom '+String(d.exported).slice(0,10)+' einspielen?\n\nAufgaben, Personen und Planstart werden ersetzt. Häkchen und Auszahlungen aus der Sicherung werden ergänzt.','Einspielen',true))return;
+  const hh=d.household,upd={name:hh.name||plan.name,start:hh.start||plan.start,people:(hh.people||[]).map(p=>Object.assign({wallet:false},p)),tasks:(hh.tasks||[]).map(t=>Object.assign({wage:0},t)),over:hh.over||{},dataVersion:DATA_VERSION};
+  await H().update(JSON.parse(JSON.stringify(upd)));
+  const ops=[];Object.entries(d.checks||{}).forEach(([id,v])=>ops.push(b=>b.set(H().collection('checks').doc(id),v,{merge:true})));
+  (d.payouts||[]).forEach(x=>ops.push(b=>b.set(H().collection('payouts').doc('imp'+(x.ts||rid())+'_'+x.p),x)));
+  for(let i=0;i<ops.length;i+=400){const b=db.batch();ops.slice(i,i+400).forEach(f=>f(b));await b.commit()}
+  logEntry('Sicherung eingespielt',String(d.exported).slice(0,10),'');toast('Sicherung eingespielt');
+ }catch(e){fail(e)}finally{const f=$('#importFile');if(f)f.value=''}
+}
+const TOUR=[
+ {tab:'week',t:'Willkommen',x:'In ein paar Schritten siehst du, was die Seite kann. Du kannst die Führung jederzeit beenden und später über das Fragezeichen oben wieder starten.'},
+ {tab:'week',sel:'.chips',t:'Personen',x:'Hier wählst du, wessen Aufgaben du sehen willst. „Alle“ zeigt den ganzen Haushalt.'},
+ {tab:'week',sel:'.cal',t:'Kalender mit Ampel',x:'Jede Kalenderwoche ist grün, wenn alles erledigt ist, rot, wenn noch etwas offen ist, und grau, wenn sie noch kommt. Tippe auf eine Woche, um sie unten anzuzeigen.'},
+ {tab:'week',sel:'.task',t:'Abhaken',x:'Erledigte Aufgaben hakst du ab. Bei täglichen Aufgaben gibt es ein Feld pro Tag. Unter „Was ist zu tun?“ stehen die einzelnen Schritte.'},
+ {tab:'swap',sel:'.box',t:'Tauschen',x:'Wähle einmal pro Gerät aus, wer du bist. Dann kannst du Aufgaben zum Tausch anbieten und auf Angebote anderer antworten. Getauscht wird erst, wenn beide zugestimmt haben.'},
+ {tab:'stats',sel:'h2',t:'Auswertung',x:'Hier siehst du die geplante Arbeit pro Person, die erledigten Minuten im Monat und insgesamt sowie den Verlauf aller Monate.'},
+ {tab:'stats',sel:'.seg',t:'Geldkonto und Verdienst',x:'Personen mit Geldkonto bekommen für bezahlte Aufgaben Lohn gutgeschrieben. Die Grafik zeigt den Verdienst pro Woche, Monat oder Jahr. Mit „Ausbezahlt“ setzt du ein Konto auf null.'},
+ {tab:'edit',sel:'.box',t:'Aufgaben bearbeiten',x:'Lege Aufgaben an und ändere Dauer, Intervall, Stundenlohn und die Schritte. „Pool“ heißt: Die Seite verteilt die Aufgabe fair nach Minuten. Alternativ weist du sie fest einer Person zu.'},
+ {tab:'edit',sel:'[data-wallet]',t:'Personen und Geldkonto',x:'Hier verwaltest du die Personen des Haushalts und schaltest für jede das Geldkonto ein oder aus.'},
+ {tab:'edit',sel:'.log',t:'Logbuch, Sicherung, Zugang',x:'Das Logbuch zeigt jede Änderung an Aufgaben und Personen. Darunter findest du Sicherung, Einladungscode und Abmelden. Viel Spaß!'}
+];
+function tourGo(){if(tour>=TOUR.length){tour=null;try{localStorage.setItem('hh_tour','1')}catch(e){}render();return}const s=TOUR[tour];if(s&&s.tab){edit=null;tab=s.tab}render()}
+function tourHtml(){
+ if(whatsNew&&tour===null)return `<div class="tour-pad"></div><div class="tour" role="dialog" aria-label="Neu in dieser Version"><h3>Neu in Version ${esc(whatsNew)}</h3><p>${CHANGELOG[whatsNew].map(esc).join('<br>')}</p><div class="row"><button class="btn" data-a="tour">Führung ansehen</button><span class="sp"></span><button class="btn pri" data-a="wnClose">Alles klar</button></div></div>`;
+ if(tour===null)return '';
+ if(tour===-1)return `<div class="tour-pad"></div><div class="tour" role="dialog" aria-label="Führung"><h3>Kurze Führung gefällig?</h3><p>In etwa einer Minute zeige ich dir alle Funktionen. Du kannst sie auch später über das Fragezeichen oben starten.</p><div class="row"><button class="btn" data-a="tourEnd">Später</button><span class="sp"></span><button class="btn pri" data-a="tour">Führung starten</button></div></div>`;
+ const s=TOUR[tour];
+ return `<div class="tour-pad"></div><div class="tour" role="dialog" aria-label="Führung"><div class="cnt">${tour+1} von ${TOUR.length}</div><h3>${esc(s.t)}</h3><p>${esc(s.x)}</p><div class="row"><button class="btn" data-a="tourEnd">Beenden</button><span class="sp"></span>${tour?'<button class="btn" data-a="tourBack">Zurück</button>':''}<button class="btn pri" data-a="tourNext">${tour===TOUR.length-1?'Fertig':'Weiter'}</button></div></div>`;
+}
+function tourHighlight(){
+ if(tour===null||tour<0)return;const s=TOUR[tour];if(!s||!s.sel)return;
+ let el=document.querySelector('#app '+s.sel);if(!el)return;
+ if(s.sel==='[data-wallet]'||s.sel==='.log')el=el.closest('.box')||el;
+ el.classList.add('tour-hl');try{el.scrollIntoView({block:'center',behavior:'smooth'})}catch(e){}
+}
+
+/* Kalender-Export */
+function viewCal(){
+ const c=calCfg,opt=(v,l,cur)=>`<option value="${v}" ${String(cur)===String(v)?'selected':''}>${l}</option>`;
+ return `<div style="margin-top:6px;border-top:1px solid var(--line);padding-top:6px">
+ <label class="f" for="cWho">Für wen</label><select id="cWho" class="inp">${opt('all','Alle',c.who)}${plan.people.map(p=>opt(p.id,esc(p.name),c.who)).join('')}</select>
+ <label class="f" for="cWeeks">Zeitraum</label><select id="cWeeks" class="inp">${[[4,'4 Wochen'],[12,'12 Wochen'],[26,'26 Wochen'],[52,'1 Jahr']].map(([v,l])=>opt(v,l,c.weeks)).join('')}</select>
+ <label class="f" for="cDay">Wöchentliche Aufgaben eintragen am</label><select id="cDay" class="inp">${['Montag','Dienstag','Mittwoch','Donnerstag','Freitag','Samstag','Sonntag'].map((l,k)=>opt(k,l,c.day)).join('')}</select>
+ <label class="cb"><input type="checkbox" id="cDaily" ${c.daily?'checked':''}> <span>Tägliche Aufgaben auch eintragen (ein Termin pro Tag)</span></label>
+ <label class="cb"><input type="checkbox" id="cAlarm" ${c.alarm?'checked':''}> <span>Erinnerung am Vorabend um 18 Uhr</span></label>
+ <button class="btn pri wide" data-a="calGo">Kalenderdatei erstellen</button>
+ <div class="box small" style="background:var(--accs);border:0">
+ <b>Wichtig: einmaliger Export, kein Abo</b>
+ <div style="margin-top:4px">Die Termine werden einmal in deinen Kalender kopiert. Ändert sich der Plan, wird getauscht oder eine Aufgabe gelöscht, passt sich dein Kalender nicht von selbst an.</div>
+ <div style="margin-top:8px"><b>Empfehlung:</b> Lege vorher in deiner Kalender-App einen eigenen Kalender namens „Haushalt“ an und importiere die Termine dorthin. Bei Änderungen löschst du einfach diesen Kalender, legst ihn neu an und exportierst erneut. Deine anderen Termine bleiben unberührt.</div>
+ <div style="margin-top:8px"><b>iPhone:</b> Nach dem Tippen erscheint „Alle hinzufügen“. Oben kannst du den Kalender „Haushalt“ auswählen.</div>
+ <div style="margin-top:8px"><b>Android:</b> Wähle im Teilen-Menü deine Kalender-App, oder öffne die heruntergeladene Datei aus den Benachrichtigungen bzw. dem Ordner „Downloads“. Falls die Google-Kalender-App die Datei nicht annimmt: im Browser calendar.google.com öffnen (Desktop-Ansicht), Einstellungen → Importieren und Exportieren → Datei auswählen und als Ziel „Haushalt“ wählen.</div>
+ <div style="margin-top:8px"><b>Computer:</b> Die heruntergeladene .ics-Datei per Doppelklick öffnen oder in Google, Outlook bzw. Apple Kalender importieren.</div>
+ </div></div>`;
+}
+function readCal(){const g=id=>$(id);if(!g('#cWho'))return;calCfg={who:g('#cWho').value,weeks:+g('#cWeeks').value,day:+g('#cDay').value,daily:g('#cDaily').checked,alarm:g('#cAlarm').checked}}
+function icsEsc(t){return String(t).replace(/\\/g,'\\\\').replace(/;/g,'\\;').replace(/,/g,'\\,').replace(/\r?\n/g,'\\n')}
+function icsFold(line){const enc=new TextEncoder();if(enc.encode(line).length<=74)return line;let out='',cur='',n=0;for(const ch of line){const b=enc.encode(ch).length;if(n+b>73){out+=cur+'\r\n ';cur='';n=1}cur+=ch;n+=b}return out+cur}
+function icsDate(d){return iso(d).replace(/-/g,'')}
+function exportIcs(){
+ const c=calCfg,nw=Math.max(0,nowWeek()),now=new Date(),stamp=now.toISOString().replace(/[-:]/g,'').replace(/\.\d+/,'');
+ const L=['BEGIN:VCALENDAR','VERSION:2.0','PRODID:-//Haushaltsplan//DE','CALSCALE:GREGORIAN','METHOD:PUBLISH','X-WR-CALNAME:'+icsEsc('Haushalt – '+(plan.name||''))];
+ let n=0;
+ for(let i=nw;i<nw+c.weeks;i++){
+  const mon=weekMon(i),w=wid(i);
+  assign(i).forEach(x=>{
+   if(c.who!=='all'&&x.p!==c.who)return;
+   const daily=x.t.iv==='daily';if(daily&&!c.daily)return;
+   const days=daily?[0,1,2,3,4,5,6]:[c.day];
+   days.forEach(k=>{
+    const d=new Date(mon.getFullYear(),mon.getMonth(),mon.getDate()+k),d2=new Date(d.getFullYear(),d.getMonth(),d.getDate()+1);
+    const who=pname(x.p),sum=x.t.name+(c.who==='all'?' ('+who+')':'');
+    let desc=x.t.min+' Min'+(daily?' pro Tag':'')+', zuständig: '+who+(daily?'':'\nZu erledigen in KW '+isoWeek(mon));
+    if(x.t.steps&&x.t.steps.length)desc+='\n\nWas ist zu tun:\n'+x.t.steps.map(s=>'– '+s).join('\n');
+    L.push('BEGIN:VEVENT','UID:'+hid+'-'+w+'-'+x.t.id+(daily?'-'+k:'')+'@haushaltsplan','DTSTAMP:'+stamp,'DTSTART;VALUE=DATE:'+icsDate(d),'DTEND;VALUE=DATE:'+icsDate(d2),'SUMMARY:'+icsEsc(sum),'DESCRIPTION:'+icsEsc(desc),'TRANSP:TRANSPARENT');
+    if(c.alarm)L.push('BEGIN:VALARM','ACTION:DISPLAY','DESCRIPTION:'+icsEsc(sum),'TRIGGER:-PT6H','END:VALARM');
+    L.push('END:VEVENT');n++;
+   });
+  });
+ }
+ L.push('END:VCALENDAR');
+ if(!n){uiAlert('Im gewählten Zeitraum gibt es keine Aufgaben.');return}
+ const ics=L.map(icsFold).join('\r\n')+'\r\n',blob=new Blob([ics],{type:'text/calendar;charset=utf-8'}),url=URL.createObjectURL(blob);
+ const ios=/iPhone|iPad|iPod/.test(navigator.userAgent)||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1);
+ const fname='haushalt-'+(c.who==='all'?'alle':pname(c.who).toLowerCase().replace(/[^a-z0-9äöüß]+/g,'-'))+'.ics';
+ const android=/Android/i.test(navigator.userAgent);
+ const download=()=>{const a=document.createElement('a');a.href=url;a.download=fname;a.type='text/calendar';document.body.appendChild(a);a.click();a.remove()};
+ if(ios){location.href=url}
+ else if(android){
+  let file=null;try{file=new File([ics],fname,{type:'text/calendar'})}catch(e){}
+  if(file&&navigator.canShare&&navigator.canShare({files:[file]})){
+   navigator.share({files:[file],title:'Haushalt-Termine'}).catch(err=>{if(err&&err.name!=='AbortError')download()});
+  }else download();
+ }
+ else download();
+ setTimeout(()=>URL.revokeObjectURL(url),60000);
+}
+
+/* Dialoge und Hinweise */
+let dlgResolve=null,toastT=null,toastAct=null;
+function dlgShow({title='',text='',ok='OK',cancel=null,input=null,danger=false,choices=null}){
+ if(dlgResolve)dlgClose(false);
+ return new Promise(res=>{dlgResolve=res;const d=$('#dlg');
+  const ch=choices?`<div class="choices">${choices.map(c=>`<button class="btn" data-dlg="${esc(c.v)}">${c.color?`<span class="dot" style="background:${c.color}"></span>`:''}${esc(c.l)}</button>`).join('')}</div>`:'';
+  d.innerHTML=`<div class="dlg-bg"><div class="dlg" role="dialog" aria-modal="true">${title?`<h3>${esc(title)}</h3>`:''}${text?`<p>${esc(text).replace(/\n/g,'<br>')}</p>`:''}${input!==null?`<input id="dlgIn" class="inp" style="margin-top:8px" value="${esc(input)}" autocomplete="off">`:''}${ch}<div class="row" style="justify-content:flex-end;margin-top:14px">${cancel?`<button class="btn" data-dlg="0">${esc(cancel)}</button>`:''}${choices?'':`<button class="btn ${danger?'danger':'pri'}" data-dlg="1">${esc(ok)}</button>`}</div></div></div>`;
+  d.style.display='block';setTimeout(()=>{const i=$('#dlgIn');if(i){i.focus();i.select()}else{const b=d.querySelector('[data-dlg="1"],.choices button');if(b)b.focus()}},60);
+ });
+}
+function dlgClose(v){const d=$('#dlg');d.style.display='none';d.innerHTML='';const r=dlgResolve;dlgResolve=null;if(r)r(v)}
+document.addEventListener('click',e=>{
+ const b=e.target.closest('[data-dlg]');
+ if(b){e.stopPropagation();e.preventDefault();const v=b.dataset.dlg,inp=$('#dlgIn');dlgClose(v==='1'?(inp?inp.value:true):v==='0'?(inp?null:false):v);return}
+ const t=e.target.closest('[data-toast]');
+ if(t){e.stopPropagation();$('#toast').classList.remove('on');const f=toastAct;toastAct=null;if(f)f()}
+},true);
+const uiAlert=(text,title)=>dlgShow({title:title||'',text,ok:'OK'});
+const uiConfirm=(text,ok='OK',danger=false,title='')=>dlgShow({title,text,ok,cancel:'Abbrechen',danger});
+const uiPrompt=(title,val='')=>dlgShow({title,input:val,ok:'Speichern',cancel:'Abbrechen'});
+function toast(msg,actLabel,act){const t=$('#toast');toastAct=act||null;t.innerHTML=`<span class="sp">${esc(msg)}</span>${actLabel?`<button class="btn sm" data-toast="1">${esc(actLabel)}</button>`:''}`;t.classList.add('on');clearTimeout(toastT);toastT=setTimeout(()=>{t.classList.remove('on');toastAct=null},actLabel?6000:2500)}
+
+/* Wer bin ich */
+function updateMe(){const b=$('#meBtn');if(!b)return;if(mode!=='app'||!plan||!plan.people.length){b.hidden=true;return}b.hidden=false;const p=me&&person(me);b.innerHTML=p?`<span class="dot" style="background:${p.color}"></span>${esc(p.name)}`:'Wer bist du?'}
+async function askMe(){
+ if(!plan||!plan.people.length)return;
+ const v=await dlgShow({title:'Wer bist du?',text:'Dann zeigt die Seite zuerst deine Aufgaben und du kannst tauschen. Die Auswahl gilt nur für dieses Gerät und lässt sich oben rechts ändern.',choices:plan.people.map(p=>({v:p.id,l:p.name,color:p.color})),cancel:'Später'});
+ if(v&&person(v)){me=v;sel=v;persist();render()}
+}
+
+/* Vergangene Wochen einfrieren */
+function frozenList(w){const f=(plan.frozen||{})[w];if(!f)return null;return f.map(e=>{const live=plan.tasks.find(t=>t.id===e.i)||{};return{t:Object.assign({steps:[],wage:0},live,{id:e.i,name:e.n,min:e.m,iv:e.v}),p:e.p,fz:true}})}
+function ensureFrozen(){
+ const nw=nowWeek();if(nw<=0||!plan)return;const f=plan.frozen||{},pf={};
+ for(let i=Math.max(0,nw-104);i<nw;i++){const w=wid(i);if(!f[w])pf[w]=assign(i).map(x=>({i:x.t.id,p:x.p,n:x.t.name,m:x.t.min,v:x.t.iv}))}
+ const keys=Object.keys(pf);if(!keys.length)return;
+ plan.frozen=Object.assign({},f,pf);assignCache=null;
+ const FP=firebase.firestore.FieldPath,args=[];keys.forEach(w=>args.push(new FP('frozen',w),pf[w]));
+ H().update(...args).catch(e=>console.error(e));
+}
+
+/* Noch offen aus Vorwochen */
+function viewOverdue(ppl){
+ const nw=nowWeek(),ids=new Set(ppl.map(p=>p.id)),items=[];
+ for(let j=Math.max(0,nw-8);j<nw;j++)assign(j).forEach(x=>{if(ids.has(x.p)&&!keysFor(x.t).every(k=>rec(j,k)))items.push({j,x})});
+ if(!items.length)return '';
+ let h=`<div class="box overdue"><div class="ph"><h3>Noch offen aus Vorwochen</h3><span class="sp"></span><span class="badge open">${items.length}</span></div>`;
+ items.forEach(({j,x})=>{const t=x.t,mon=weekMon(j),daily=t.iv==='daily';
+  h+=`<div class="task"><div class="row">`;
+  if(daily){const done=keysFor(t).filter(k=>rec(j,k)).length;h+=`<span class="chk" aria-hidden="true"></span><span class="sp">${esc(t.name)} <span class="muted small">${done} von 7 Tagen</span></span>`}
+  else h+=`<button class="chk" data-a="chk" data-w="${j}" data-t="${t.id}" data-p="${x.p}" data-k="${t.id}" aria-label="${esc(t.name)} erledigt"></button><span class="sp">${esc(t.name)}</span>`;
+  h+=`<span class="muted small">${ppl.length>1?esc(pname(x.p))+', ':''}KW ${isoWeek(mon)}</span>${daily?`<button class="btn sm" data-a="week" data-v="${j}">Öffnen</button>`:''}</div></div>`});
+ return h+`</div>`;
+}
+/* Tauschliste gruppieren */
+function groupOpts(opts){const g={};opts.forEach(o=>{const k=o.l.split(': ')[0];(g[k]=g[k]||[]).push(o)});return Object.entries(g).map(([k,list])=>`<optgroup label="${esc(k)}">${list.map(o=>`<option value="${esc(o.v)}">${esc(o.l.split(': ').slice(1).join(': '))}</option>`).join('')}</optgroup>`).join('')}
+
+/* Messenger */
+function msgOffer(from,tname,w){return '🔄 Tauschangebot von '+pname(from)+': „'+tname+'“ in '+occLabel(w)+'. Wer übernimmt? Gegenangebot hier:'}
+async function shareMsg(text){
+ const url=location.origin+location.pathname+'#tausch',full=text+'\n'+url;
+ if(navigator.share){try{await navigator.share({text:full});return}catch(e){if(e&&e.name==='AbortError')return}}
+ const ch=await dlgShow({title:'Nachricht teilen',text:full,choices:[{v:'wa',l:'In WhatsApp öffnen'},{v:'copy',l:'Text kopieren (für Signal & Co.)'}],cancel:'Schließen'});
+ if(ch==='wa')window.open('https://wa.me/?text='+encodeURIComponent(full),'_blank');
+ if(ch==='copy'){try{await navigator.clipboard.writeText(full);toast('Text kopiert')}catch(e){uiAlert(full,'Zum Kopieren')}}
+}
+
+/* Zugang und Mitglieder */
+function viewAccess(){
+ const mi=plan.memberInfo||{},mem=plan.members||[];
+ let h=`<h2>Zugang</h2><div class="box"><div class="small">Angemeldet als <b>${esc(user.email)}</b></div>
+ <div class="muted small" style="margin-top:6px">Alle im Haushalt können sich mit diesen Zugangsdaten anmelden. Wer ein eigenes Konto möchte, erstellt eins und tritt mit diesem Code bei:</div>
+ <div class="code">${esc(plan.code)}</div><div class="row" style="flex-wrap:wrap"><button class="btn sm" data-a="copyCode">Code kopieren</button><button class="btn sm" data-a="renewCode">Code erneuern</button></div></div>`;
+ h+=`<h2>Konten im Haushalt</h2><div class="box">`+mem.map(uid=>`<div class="ti"><span class="sp small">${esc(mi[uid]||'Konto ohne bekannte E-Mail')}${uid===user.uid?' <span class="muted">(dieses Gerät)</span>':''}</span>${uid===user.uid?'':`<button class="btn sm del" data-a="memRemove" data-v="${esc(uid)}">Entfernen</button>`}</div>`).join('')+`</div>`;
+ h+=`<div class="row" style="margin-top:12px;flex-wrap:wrap"><button class="btn del" data-a="logout">Abmelden</button><button class="btn del" data-a="leave">Haushalt verlassen</button></div>`;
+ return h;
+}
+
+render();
+</script>
+</body>
+</html>
