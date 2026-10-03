@@ -11,6 +11,7 @@
 <meta name="apple-mobile-web-app-title" content="Haushalt">
 <link rel="manifest" href="manifest.json">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
+<script>if('serviceWorker' in navigator)navigator.serviceWorker.register('sw.js').catch(e=>console.warn(e))</script>
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🏠</text></svg>">
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
@@ -153,9 +154,9 @@ const COLORS=['#2b5d8a','#c0563f','#2e8a5a','#8456b0','#c28a1e','#21918f','#b548
 const WD=['Mo','Di','Mi','Do','Fr','Sa','So'];
 const MONTHS=['Januar','Februar','März','April','Mai','Juni','Juli','August','September','Oktober','November','Dezember'];
 const DAY=864e5;
-const APP_VERSION='5.0';
+const APP_VERSION='5.1';
 const DATA_VERSION=3;
-const CHANGELOG={'5.0':['Beim Start „Wer bist du?“: Die Seite zeigt zuerst deine Aufgaben','„Noch offen aus Vorwochen“ in der aktuellen Woche','Eigene Dialoge und „Rückgängig“ nach dem Abhaken','Vergangene Wochen bleiben fest, auch wenn der Plan geändert wird','Tauschangebote per WhatsApp, Signal & Co. teilen','Mitglieder verwalten, Einladungscode erneuern, Haushalt verlassen','Als App auf dem Home-Bildschirm installierbar'],'4.2':['Kalender-Export funktioniert jetzt auch auf Android','Erklärungen zum Kalender-Export und zur Anmeldung'],'4.1':['Kalender-Export: Aufgaben als Termine in den iPhone- oder Google-Kalender übernehmen','Hinweis zum Einladungscode auf der Anmeldeseite'],'4.0':['Geldkonto pro Person mit Stundenlohn je Aufgabe','Verdienst-Grafik nach Woche, Monat oder Jahr','Logbuch für Änderungen an Aufgaben und Personen','Führung durch die Funktionen (Fragezeichen oben)','Sicherung herunterladen und einspielen']};
+const CHANGELOG={'5.1':['Die App startet jetzt auch ohne Internet','Offline abgehakte Aufgaben werden automatisch synchronisiert, sobald wieder Netz da ist'],'5.0':['Beim Start „Wer bist du?“: Die Seite zeigt zuerst deine Aufgaben','„Noch offen aus Vorwochen“ in der aktuellen Woche','Eigene Dialoge und „Rückgängig“ nach dem Abhaken','Vergangene Wochen bleiben fest, auch wenn der Plan geändert wird','Tauschangebote per WhatsApp, Signal & Co. teilen','Mitglieder verwalten, Einladungscode erneuern, Haushalt verlassen','Als App auf dem Home-Bildschirm installierbar'],'4.2':['Kalender-Export funktioniert jetzt auch auf Android','Erklärungen zum Kalender-Export und zur Anmeldung'],'4.1':['Kalender-Export: Aufgaben als Termine in den iPhone- oder Google-Kalender übernehmen','Hinweis zum Einladungscode auf der Anmeldeseite'],'4.0':['Geldkonto pro Person mit Stundenlohn je Aufgabe','Verdienst-Grafik nach Woche, Monat oder Jahr','Logbuch für Änderungen an Aufgaben und Personen','Führung durch die Funktionen (Fragezeichen oben)','Sicherung herunterladen und einspielen']};
 const eur=v=>(Math.round((+v||0)*100)/100).toLocaleString('de-DE',{style:'currency',currency:'EUR'});
 const r2=v=>Math.round(v*100)/100;
 const BAD=['Spiegel putzen','Waschbecken und Armatur reinigen','Toilette putzen','Dusche/Wanne reinigen','Boden wischen'];
@@ -172,6 +173,7 @@ const TEMPLATE=[
 
 firebase.initializeApp(firebaseConfig);
 const db=firebase.firestore(),auth=firebase.auth(),FV=firebase.firestore.FieldValue;
+db.enablePersistence({synchronizeTabs:true}).catch(e=>console.warn('Offline-Speicher nicht verfügbar',e));
 let user=null,hid=null,mode='loading',unsubs=[],authMsg='',busy=false;
 let calOpen=false,calCfg={who:'',weeks:12,day:5,daily:false,alarm:true},migrating=false,payouts=[],logs=[],tour=null,newVer=null,period='month',whatsNew=null;
 let plan=null,checks={},swaps=[],assignCache=null,edit=null,tab='week',sel='all',me=null,curWeek=0,viewMonth=null,nameOf={};
