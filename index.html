@@ -1,0 +1,287 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Haushaltsplan</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=Figtree:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+<style>
+:root{
+  --bg:#EEF3F1; --surface:#FFFFFF; --ink:#1C2A28; --muted:#5D6E6A; --line:#D5DFDB; --soft:#E3EBE8;
+  --bernd:#2F6F9F; --qingxia:#A8456F; --sebastian:#3B8053; --linda:#B57A12;
+  --today:#1C2A28;
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px);
+  padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --bg:#121917; --surface:#1B2422; --ink:#E6EEEB; --muted:#93A5A0; --line:#2C3936; --soft:#24302D;
+    --bernd:#6FA8D6; --qingxia:#DB7FA6; --sebastian:#73BE8B; --linda:#E2AA4A; --today:#E6EEEB;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#121917; --surface:#1B2422; --ink:#E6EEEB; --muted:#93A5A0; --line:#2C3936; --soft:#24302D;
+  --bernd:#6FA8D6; --qingxia:#DB7FA6; --sebastian:#73BE8B; --linda:#E2AA4A; --today:#E6EEEB;
+}
+*,*::before,*::after{box-sizing:inherit}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:Figtree,system-ui,-apple-system,"Segoe UI",sans-serif;font-size:16px;line-height:1.45}
+.wrap{max-width:760px;margin:0 auto;padding:20px 16px 48px}
+h1{font-family:"Bricolage Grotesque",Figtree,system-ui,sans-serif;font-weight:800;font-size:clamp(2rem,7vw,2.8rem);line-height:1;margin:0;letter-spacing:-.02em}
+.top{display:flex;justify-content:space-between;align-items:flex-end;gap:12px;margin-bottom:18px}
+.sync{font-size:.8rem;color:var(--muted)}
+button{font:inherit;color:inherit;cursor:pointer}
+button:focus-visible,.chk:focus-visible{outline:3px solid var(--bernd);outline-offset:2px}
+
+/* calendar */
+.cal{background:var(--surface);border-radius:18px;padding:14px;border:1px solid var(--line)}
+.calhead{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}
+.calhead strong{font-family:"Bricolage Grotesque",sans-serif;font-weight:600;font-size:1.15rem}
+.nav{display:flex;gap:6px}
+.nav button{border:1px solid var(--line);background:transparent;border-radius:10px;min-width:38px;height:38px;padding:0 10px}
+.grid{display:grid;grid-template-columns:44px repeat(7,1fr);gap:2px;font-size:.88rem}
+.grid .dow{color:var(--muted);text-align:center;font-size:.75rem;padding:4px 0}
+.wk{display:contents}
+.wk>button{border:0;background:transparent;height:38px;border-radius:8px;display:flex;align-items:center;justify-content:center;position:relative}
+.wk .kw{font-size:.72rem;color:var(--muted);flex-direction:column;line-height:1.1}
+.kw .pct{font-weight:700;font-size:.7rem}
+.wk.sel>button{background:var(--soft)}
+.wk.sel>button:first-child{border-radius:8px 0 0 8px}
+.d.out{color:var(--muted);opacity:.5}
+.d.today span{background:var(--today);color:var(--bg);border-radius:50%;width:28px;height:28px;display:flex;align-items:center;justify-content:center;font-weight:700}
+
+/* week */
+.weekbar{margin:22px 0 10px}
+.weekbar h2{font-family:"Bricolage Grotesque",sans-serif;font-weight:600;font-size:1.5rem;margin:0}
+.weekbar p{margin:2px 0 0;color:var(--muted)}
+.meter{height:8px;background:var(--soft);border-radius:8px;overflow:hidden;margin-top:10px}
+.meter i{display:block;height:100%;background:var(--ink);width:0;transition:width .3s}
+.chips{display:flex;gap:8px;overflow-x:auto;padding:12px 0 4px;scrollbar-width:none}
+.chip{border:1.5px solid var(--line);background:var(--surface);border-radius:999px;padding:7px 14px;white-space:nowrap;font-weight:600;font-size:.9rem}
+.chip[aria-pressed="true"]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+
+.person{background:var(--surface);border-radius:18px;margin-top:14px;border:1px solid var(--line);border-top:6px solid var(--c);overflow:hidden}
+.phead{display:flex;justify-content:space-between;align-items:baseline;padding:14px 16px 6px}
+.phead h3{margin:0;font-family:"Bricolage Grotesque",sans-serif;font-weight:600;font-size:1.25rem;color:var(--c)}
+.phead span{color:var(--muted);font-size:.85rem}
+ul{list-style:none;margin:0;padding:0 8px 10px}
+li{display:flex;align-items:center;gap:12px;padding:10px 8px;border-radius:12px}
+li+li{border-top:1px solid var(--soft)}
+.chk{flex:none;width:30px;height:30px;border-radius:9px;border:2px solid var(--c);background:transparent;display:flex;align-items:center;justify-content:center;padding:0}
+.chk svg{width:18px;height:18px;opacity:0;transform:scale(.6);transition:all .15s}
+.chk[aria-checked="true"]{background:var(--c)}
+.chk[aria-checked="true"] svg{opacity:1;transform:none}
+.tname{flex:1;font-weight:500}
+li.done .tname{color:var(--muted);text-decoration:line-through}
+.min{color:var(--muted);font-size:.85rem;white-space:nowrap}
+.days{display:flex;gap:5px;flex-wrap:wrap;margin-top:6px}
+.day{width:34px;height:30px;border-radius:8px;border:1.5px solid var(--c);background:transparent;font-size:.75rem;font-weight:600;padding:0}
+.day[aria-checked="true"]{background:var(--c);color:#fff}
+.daily{flex-direction:column;align-items:stretch}
+.daily .row{display:flex;gap:12px;align-items:center}
+.note{background:var(--surface);border:1px dashed var(--line);border-radius:18px;padding:22px;margin-top:14px;color:var(--muted);text-align:center}
+.ro{font-size:.85rem;color:var(--muted);margin-top:8px}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="top">
+    <h1>Haushalt</h1>
+    <div class="sync" id="sync">Lädt …</div>
+  </div>
+
+  <section class="cal" aria-label="Kalender">
+    <div class="calhead">
+      <strong id="monthLabel"></strong>
+      <div class="nav">
+        <button id="mPrev" aria-label="Vorheriger Monat">‹</button>
+        <button id="toToday">Heute</button>
+        <button id="mNext" aria-label="Nächster Monat">›</button>
+      </div>
+    </div>
+    <div class="grid" id="grid"></div>
+  </section>
+
+  <div class="weekbar">
+    <h2 id="weekTitle"></h2>
+    <p id="weekSub"></p>
+    <div class="meter"><i id="meter"></i></div>
+  </div>
+  <div class="chips" id="chips" role="group" aria-label="Person filtern"></div>
+  <div id="people"></div>
+  </div>
+
+<script>
+const START = new Date(2026,9,5); // Mo 5. Okt 2026 = Woche 1 des Zyklus
+const MIN = {"Treppe":30,"Bad oben":30,"Bad Mitte":15,"Bad unten":30,"Küche":30,"Mitte wischen":60,"Pflanzen gießen":10};
+const S = [
+ ["Bad oben","Küche","Pflanzen gießen"],["Bad oben"],["Bad oben","Küche","Pflanzen gießen"],["Bad oben","Mitte wischen"],
+ ["Bad oben","Pflanzen gießen"],["Bad oben"],["Bad oben","Küche","Pflanzen gießen"],["Bad oben","Mitte wischen"],
+ ["Bad oben","Treppe","Pflanzen gießen"],["Bad oben"],["Bad oben","Treppe","Pflanzen gießen"],["Bad oben","Treppe"]];
+const L = [
+ ["Bad Mitte","Bad unten","Treppe"],["Bad Mitte","Treppe"],["Bad Mitte","Treppe"],["Bad Mitte","Bad unten","Treppe"],
+ ["Bad Mitte","Küche","Treppe"],["Bad Mitte","Treppe"],["Bad Mitte","Bad unten","Treppe"],["Bad Mitte","Treppe"],
+ ["Bad Mitte","Küche"],["Bad Mitte","Bad unten","Treppe"],["Bad Mitte","Küche"],["Bad Mitte","Mitte wischen"]];
+const PEOPLE = [
+ {id:"B",name:"Bernd",c:"var(--bernd)"},{id:"Q",name:"Qingxia",c:"var(--qingxia)"},
+ {id:"S",name:"Sebastian",c:"var(--sebastian)"},{id:"L",name:"Linda",c:"var(--linda)"}];
+const DOW = ["Mo","Di","Mi","Do","Fr","Sa","So"];
+const MONTHS = ["Januar","Februar","März","April","Mai","Juni","Juli","August","September","Oktober","November","Dezember"];
+const slug = s => s.toLowerCase().replace(/ä/g,"ae").replace(/ö/g,"oe").replace(/ü/g,"ue").replace(/ß/g,"ss").replace(/[^a-z0-9]+/g,"_");
+
+function monday(d){const x=new Date(d.getFullYear(),d.getMonth(),d.getDate());const g=(x.getDay()+6)%7;x.setDate(x.getDate()-g);return x}
+function addDays(d,n){const x=new Date(d);x.setDate(x.getDate()+n);return x}
+function wkey(m){return "w"+m.getFullYear()+String(m.getMonth()+1).padStart(2,"0")+String(m.getDate()).padStart(2,"0")}
+function isoWeek(d){const t=new Date(Date.UTC(d.getFullYear(),d.getMonth(),d.getDate()));const n=t.getUTCDay()||7;t.setUTCDate(t.getUTCDate()+4-n);const y=new Date(Date.UTC(t.getUTCFullYear(),0,1));return Math.ceil(((t-y)/864e5+1)/7)}
+function cycleWeek(m){const diff=Math.round((m-START)/(7*864e5));if(diff<0)return null;return diff%12+1}
+function sameDay(a,b){return a.getFullYear()==b.getFullYear()&&a.getMonth()==b.getMonth()&&a.getDate()==b.getDate()}
+
+function tasksFor(m){
+  const w=cycleWeek(m); if(!w) return null;
+  const out={B:[],Q:[],S:[],L:[]};
+  out.B.push({key:"B_staub",name:"Staubsauger starten",min:35,daily:true});
+  out.B.push({key:"B_staub_oben",name:"Staubsauger starten oben",min:15});
+  out.B.push({key:"B_staub_unten",name:"Staubsauger starten unten",min:15});
+  out.B.push({key:"B_muell",name:"Mülltonnen",min:5});
+  if(w%2===0) out.B.push({key:"B_pflanzen",name:"Pflanzen gießen",min:10});
+  if([2,6,10].includes(w)) out.B.push({key:"B_filter",name:"Wasserfilter reinigen",min:10});
+  out.Q.push({key:"Q_waesche",name:"Wäsche waschen",min:60});
+  S[w-1].forEach(t=>out.S.push({key:"S_"+slug(t),name:t,min:MIN[t]}));
+  L[w-1].forEach(t=>out.L.push({key:"L_"+slug(t),name:t,min:MIN[t]}));
+  return {w,out};
+}
+function progress(m,checks){
+  const t=tasksFor(m); if(!t) return null;
+  let tot=0,done=0;
+  for(const p in t.out) for(const k of t.out[p]){
+    tot+=k.min;
+    if(k.daily){let n=0;for(let i=0;i<7;i++) if(checks[k.key+"_"+i]) n++; done+=k.min*n/7}
+    else if(checks[k.key]) done+=k.min;
+  }
+  return tot?done/tot:0;
+}
+
+let all={};            // weekKey -> {field:bool}
+let selMon=monday(new Date());
+let viewMonth=new Date(selMon.getFullYear(),selMon.getMonth(),1);
+let filter="all";
+let db=null, local=false, canWrite=true;
+const $=id=>document.getElementById(id);
+const CHECK='<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>';
+
+function renderCal(){
+  $("monthLabel").textContent=MONTHS[viewMonth.getMonth()]+" "+viewMonth.getFullYear();
+  const g=$("grid"); g.innerHTML="";
+  g.insertAdjacentHTML("beforeend",'<div class="dow">KW</div>'+DOW.map(d=>`<div class="dow">${d}</div>`).join(""));
+  let m=monday(viewMonth); const today=new Date();
+  for(let r=0;r<6;r++){
+    const row=document.createElement("div"); row.className="wk"+(sameDay(m,selMon)?" sel":"");
+    const pr=progress(m,all[wkey(m)]||{});
+    const kw=document.createElement("button"); kw.className="kw";
+    kw.innerHTML=`<span>${isoWeek(m)}</span>`+(pr==null?"":`<span class="pct" style="color:${pr>=1?'var(--sebastian)':'var(--muted)'}">${Math.round(pr*100)}%</span>`);
+    kw.setAttribute("aria-label","Kalenderwoche "+isoWeek(m)+" auswählen");
+    const mm=new Date(m); kw.onclick=()=>selectWeek(mm); row.appendChild(kw);
+    for(let i=0;i<7;i++){
+      const d=addDays(m,i); const b=document.createElement("button");
+      b.className="d"+(d.getMonth()!==viewMonth.getMonth()?" out":"")+(sameDay(d,today)?" today":"");
+      b.innerHTML=`<span>${d.getDate()}</span>`; b.setAttribute("aria-label",d.toLocaleDateString("de-DE"));
+      b.onclick=()=>selectWeek(mm); row.appendChild(b);
+    }
+    g.appendChild(row);
+    m=addDays(m,7);
+    if(r>=3 && m.getMonth()!==viewMonth.getMonth() && m>viewMonth) break;
+  }
+}
+function selectWeek(m){selMon=m; viewMonth=new Date(m.getFullYear(),m.getMonth(),1); if(addDays(m,6).getMonth()!==m.getMonth()&&m.getMonth()!==viewMonth.getMonth()) viewMonth=new Date(m.getFullYear(),m.getMonth(),1); render()}
+
+function renderWeek(){
+  const end=addDays(selMon,6);
+  const fmt=d=>d.getDate()+". "+MONTHS[d.getMonth()].slice(0,3);
+  $("weekTitle").textContent="KW "+isoWeek(selMon)+": "+fmt(selMon)+" bis "+fmt(end);
+  const t=tasksFor(selMon); const ppl=$("people"); ppl.innerHTML="";
+  const checks=all[wkey(selMon)]||{};
+  if(!t){$("weekSub").textContent="";$("meter").style.width="0";ppl.innerHTML='<div class="note">Der Plan startet am Montag, 5. Oktober 2026.</div>';return}
+  const pr=progress(selMon,checks);
+  $("weekSub").textContent="Woche "+t.w+" von 12 im Zyklus, "+Math.round(pr*100)+" % erledigt";
+  $("meter").style.width=(pr*100)+"%";
+  for(const p of PEOPLE){
+    if(filter!=="all"&&filter!==p.id) continue;
+    const list=t.out[p.id]; const tot=list.reduce((a,b)=>a+b.min,0);
+    const sec=document.createElement("section"); sec.className="person"; sec.style.setProperty("--c",p.c);
+    sec.innerHTML=`<div class="phead"><h3>${p.name}</h3><span>${tot} Min diese Woche</span></div>`;
+    const ul=document.createElement("ul");
+    for(const k of list){
+      const li=document.createElement("li");
+      if(k.daily){
+        li.className="daily";
+        const n=[0,1,2,3,4,5,6].filter(i=>checks[k.key+"_"+i]).length;
+        if(n===7) li.classList.add("done");
+        li.innerHTML=`<div class="row"><span class="tname">${k.name} (täglich)</span><span class="min">${n}/7</span></div>`;
+        const days=document.createElement("div"); days.className="days";
+        DOW.forEach((d,i)=>{const b=document.createElement("button");b.className="day";b.setAttribute("role","checkbox");
+          b.setAttribute("aria-checked",!!checks[k.key+"_"+i]);b.setAttribute("aria-label",k.name+" "+d);b.textContent=d;
+          b.disabled=!canWrite;b.onclick=()=>toggle(k.key+"_"+i);days.appendChild(b)});
+        li.appendChild(days);
+      }else{
+        const on=!!checks[k.key]; if(on) li.classList.add("done");
+        const b=document.createElement("button"); b.className="chk"; b.setAttribute("role","checkbox");
+        b.setAttribute("aria-checked",on); b.setAttribute("aria-label",k.name); b.innerHTML=CHECK; b.disabled=!canWrite;
+        b.onclick=()=>toggle(k.key);
+        li.appendChild(b);
+        li.insertAdjacentHTML("beforeend",`<span class="tname">${k.name}</span><span class="min">${k.min} Min</span>`);
+      }
+      ul.appendChild(li);
+    }
+    sec.appendChild(ul); ppl.appendChild(sec);
+  }
+}
+function renderChips(){
+  const c=$("chips"); c.innerHTML="";
+  [{id:"all",name:"Alle"},...PEOPLE].forEach(p=>{const b=document.createElement("button");b.className="chip";b.textContent=p.name;
+    b.setAttribute("aria-pressed",filter===p.id);b.onclick=()=>{filter=p.id;try{localStorage.setItem("hh_filter",p.id)}catch(e){};render()};c.appendChild(b)});
+}
+function render(){renderCal();renderChips();renderWeek()}
+
+async function toggle(field){
+  const key=wkey(selMon); const cur=all[key]||{}; const val=!cur[field];
+  all[key]={...cur,[field]:val}; render();
+  if(local){try{localStorage.setItem("hh_all",JSON.stringify(all))}catch(e){};return}
+  try{ await db.collection("checks").doc(key).set({[field]:val},{merge:true}) }
+  catch(e){ all[key]=cur; render(); $("sync").textContent="Speichern fehlgeschlagen" }
+}
+
+$("mPrev").onclick=()=>{viewMonth=new Date(viewMonth.getFullYear(),viewMonth.getMonth()-1,1);renderCal()};
+$("mNext").onclick=()=>{viewMonth=new Date(viewMonth.getFullYear(),viewMonth.getMonth()+1,1);renderCal()};
+$("toToday").onclick=()=>selectWeek(monday(new Date()));
+try{const f=localStorage.getItem("hh_filter");if(f)filter=f}catch(e){}
+render();
+
+const firebaseConfig = {
+  apiKey: "AIzaSyAySkjUJKdug-upeiQxYIjKnjcv_H6DKiM",
+  authDomain: "haushalt-bf7a1.firebaseapp.com",
+  projectId: "haushalt-bf7a1",
+  storageBucket: "haushalt-bf7a1.firebasestorage.app",
+  messagingSenderId: "119943513849",
+  appId: "1:119943513849:web:d75866dde66e2b5610c428"
+};
+try{
+  firebase.initializeApp(firebaseConfig);
+  db=firebase.firestore();
+  db.collection("checks").onSnapshot(snap=>{
+    const n={}; snap.docs.forEach(d=>{n[d.id]=d.data()||{}}); all=n;
+    $("sync").textContent="Für alle synchronisiert"; render();
+  },err=>{$("sync").textContent="Keine Verbindung zur Datenbank"});
+}catch(e){
+  local=true;
+  try{all=JSON.parse(localStorage.getItem("hh_all")||"{}")||{}}catch(_){all={}}
+  $("sync").textContent="Nur auf diesem Gerät gespeichert"; render();
+}
+</script>
+</body>
+</html>
