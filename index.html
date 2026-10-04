@@ -153,14 +153,14 @@ const COLORS=['#2b5d8a','#c0563f','#2e8a5a','#8456b0','#c28a1e','#21918f','#b548
 const WD=['Mo','Di','Mi','Do','Fr','Sa','So'];
 const MONTHS=['Januar','Februar','März','April','Mai','Juni','Juli','August','September','Oktober','November','Dezember'];
 const DAY=864e5;
-const APP_VERSION='6.0';
+const APP_VERSION='6.2';
 const DATA_VERSION=4;
-const CHANGELOG={'6.0':['Mehrere Pools mit eigenem Personenkreis','Anteil pro Person im Pool, z. B. Kinder 50 %','Teilnehmer pro Aufgabe festlegen','Abwesenheit/Urlaub: der Pool verteilt automatisch um','Flexible Zusatzaufgaben, jederzeit buchbar','Auswertung nach festen, Pool- und flexiblen Aufgaben','Bearbeiten in Unterbereiche gegliedert','Impressum, Datenschutz und „Konto löschen“'],'5.0':['Beim Start „Wer bist du?“: Die Seite zeigt zuerst deine Aufgaben','„Noch offen aus Vorwochen“ in der aktuellen Woche','Eigene Dialoge und „Rückgängig“ nach dem Abhaken','Vergangene Wochen bleiben fest, auch wenn der Plan geändert wird','Tauschangebote per WhatsApp, Signal & Co. teilen','Mitglieder verwalten, Einladungscode erneuern, Haushalt verlassen','Als App auf dem Home-Bildschirm installierbar'],'4.2':['Kalender-Export funktioniert jetzt auch auf Android','Erklärungen zum Kalender-Export und zur Anmeldung'],'4.1':['Kalender-Export: Aufgaben als Termine in den iPhone- oder Google-Kalender übernehmen','Hinweis zum Einladungscode auf der Anmeldeseite'],'4.0':['Geldkonto pro Person mit Stundenlohn je Aufgabe','Verdienst-Grafik nach Woche, Monat oder Jahr','Logbuch für Änderungen an Aufgaben und Personen','Führung durch die Funktionen (Fragezeichen oben)','Sicherung herunterladen und einspielen']};
+const CHANGELOG={'6.2':['Impressum vervollständigt'],'6.1':['Führung und Hilfetexte an die neuen Funktionen angepasst'],'6.0':['Mehrere Pools mit eigenem Personenkreis','Anteil pro Person im Pool, z. B. Kinder 50 %','Teilnehmer pro Aufgabe festlegen','Abwesenheit/Urlaub: der Pool verteilt automatisch um','Flexible Zusatzaufgaben, jederzeit buchbar','Auswertung nach festen, Pool- und flexiblen Aufgaben','Bearbeiten in Unterbereiche gegliedert','Impressum, Datenschutz und „Konto löschen“'],'5.0':['Beim Start „Wer bist du?“: Die Seite zeigt zuerst deine Aufgaben','„Noch offen aus Vorwochen“ in der aktuellen Woche','Eigene Dialoge und „Rückgängig“ nach dem Abhaken','Vergangene Wochen bleiben fest, auch wenn der Plan geändert wird','Tauschangebote per WhatsApp, Signal & Co. teilen','Mitglieder verwalten, Einladungscode erneuern, Haushalt verlassen','Als App auf dem Home-Bildschirm installierbar'],'4.2':['Kalender-Export funktioniert jetzt auch auf Android','Erklärungen zum Kalender-Export und zur Anmeldung'],'4.1':['Kalender-Export: Aufgaben als Termine in den iPhone- oder Google-Kalender übernehmen','Hinweis zum Einladungscode auf der Anmeldeseite'],'4.0':['Geldkonto pro Person mit Stundenlohn je Aufgabe','Verdienst-Grafik nach Woche, Monat oder Jahr','Logbuch für Änderungen an Aufgaben und Personen','Führung durch die Funktionen (Fragezeichen oben)','Sicherung herunterladen und einspielen']};
 const eur=v=>(Math.round((+v||0)*100)/100).toLocaleString('de-DE',{style:'currency',currency:'EUR'});
 const r2=v=>Math.round(v*100)/100;
 const WEIGHTS=[[0,'nicht dabei'],[0.25,'25 %'],[0.5,'50 %'],[0.75,'75 %'],[1,'100 %'],[1.5,'150 %'],[2,'200 %']];
-/* Betreiberangaben für Impressum und Datenschutz – bitte vervollständigen */
-const OPERATOR={name:'Bernd Klein',street:'[Straße und Hausnummer]',city:'[PLZ] Reutlingen',email:'berndklein@ymail.com',updated:'Oktober 2026'};
+/* Betreiberangaben für Impressum und Datenschutz */
+const OPERATOR={name:'Bernd Klein',street:'Eugen-Weit-Weg 11',city:'72770 Reutlingen',email:'berndklein@ymail.com',updated:'Oktober 2026'};
 const BAD=['Spiegel putzen','Waschbecken und Armatur reinigen','Toilette putzen','Dusche/Wanne reinigen','Boden wischen'];
 function T(id,name,min,iv,off,steps){return{id,name,min,iv,mode:'pool',pool:'all',who:[],person:'',wage:0,off,steps}}
 const TEMPLATE=[
@@ -335,7 +335,7 @@ async function createHousehold(name,importOld){
  b.set(ref,data);b.set(db.collection('codes').doc(code),{hid:ref.id});b.set(db.collection('users').doc(user.uid),{hid:ref.id,email:user.email||''});
  await b.commit();
  if(oldChecks.length){const b2=db.batch();oldChecks.forEach(([id,v])=>b2.set(ref.collection('checks').doc(id),v));await b2.commit()}
- hid=ref.id;tab='edit';persist();startHousehold();
+ hid=ref.id;tab='edit';editTab='people';persist();startHousehold();
 }
 async function joinHousehold(code){
  code=code.trim().toUpperCase().replace(/\s/g,'');
@@ -394,7 +394,7 @@ function chips(){
  return `<div class="chips"><button class="chip ${sel==='all'?'on':''}" data-a="sel" data-v="all">Alle</button>${plan.people.map(p=>`<button class="chip ${sel===p.id?'on':''}" data-a="sel" data-v="${p.id}"><span class="dot" style="background:${p.color}"></span>${esc(p.name)}</button>`).join('')}</div>`;
 }
 function viewWeek(){
- if(!plan.people.length)return `<div class="box">Leg im Reiter <b>Bearbeiten</b> zuerst die Personen eures Haushalts an. Danach verteilt die Seite die Aufgaben automatisch.</div>`;
+ if(!plan.people.length)return `<div class="box">Leg unter <b>Bearbeiten → Personen</b> zuerst die Personen eures Haushalts an. Danach verteilt die Seite die Aufgaben automatisch. Beispielaufgaben sind schon angelegt und lassen sich unter Bearbeiten → Aufgaben anpassen.</div>`;
  let h=chips();
  const y=viewMonth.getFullYear(),m=viewMonth.getMonth(),first=new Date(y,m,1),last=new Date(y,m+1,0);
  let d=mondayOf(first);const today=iso(new Date());
@@ -442,7 +442,7 @@ function viewWeek(){
 function viewSwap(){
  let h=`<div class="box"><div class="muted small">Auf diesem Gerät bist du:</div><div class="chips">${plan.people.map(p=>`<button class="chip ${me===p.id?'on':''}" data-a="me" data-v="${p.id}"><span class="dot" style="background:${p.color}"></span>${esc(p.name)}</button>`).join('')}</div></div>`;
  if(!plan.people.length)return h;
- if(!me)return h+`<p class="muted small">Wähle aus, wer du bist. Dann kannst du Aufgaben anbieten und auf Angebote antworten.</p>`;
+ if(!me)return h+`<p class="muted small">Wähle aus, wer du bist (geht auch oben rechts). Dann kannst du Aufgaben anbieten und auf Angebote antworten.</p>`;
  const open=openSwaps().sort((a,b)=>a.w.localeCompare(b.w));
  h+=`<h2>Offene Tauschangebote</h2>`;
  if(!open.length)h+=`<div class="box muted small">Gerade bietet niemand etwas an. In der Wochenansicht kannst du bei deinen Aufgaben auf „Tauschen“ tippen.</div>`;
@@ -470,7 +470,7 @@ function viewSwap(){
  if(done.length){
   h+=`<h2>Zuletzt getauscht</h2><div class="box">`+done.map(s=>`<div class="ti"><div class="sp"><b>${esc(pname(s.from))}</b><span class="swap-arrow">⇄</span><b>${esc(pname(s.acc.by))}</b><div class="muted small">${esc(s.tname)} (${occLabel(s.w)}) gegen ${esc(s.acc.tname)} (${occLabel(s.acc.w)})</div></div></div>`).join('')+`</div>`;
  }
- return h+`<p class="muted small">So funktioniert's: Du bietest eine Aufgabe an, andere machen ein Gegenangebot aus einer beliebigen künftigen Woche, du nimmst eins an. Erst dann wird getauscht.</p>`;
+ return h+`<p class="muted small">So funktioniert's: Du bietest in der Wochenansicht eine Aufgabe mit „Tauschen“ an. Andere machen ein Gegenangebot aus einer beliebigen künftigen Woche, du nimmst eins an. Erst dann wird getauscht. Über „Bescheid geben“ oder „Im Messenger teilen“ informierst du die anderen.</p>`;
 }
 function pname(id){const p=person(id);return p?p.name:(nameOf[id]||'(entfernt)')}
 function bars(vals,ids){
@@ -481,7 +481,7 @@ function viewStats(){
  const from=Math.max(0,nowWeek()),N=52,pl={};plan.people.forEach(p=>pl[p.id]=0);
  for(let i=from;i<from+N;i++)assign(i).forEach(x=>{pl[x.p]+=weekMin(x.t)/N});
  const avg=plan.people.length?Object.values(pl).reduce((a,b)=>a+b,0)/plan.people.length:0;
- let h=`<h2>Geplante Arbeit</h2><div class="box"><div class="muted small">Durchschnitt pro Woche über die nächsten 52 Wochen, inklusive Tausche. Schnitt aller: ${fmtMin(avg)}</div>${bars(pl,plan.people.map(p=>p.id))}</div>`;
+ let h=`<h2>Geplante Arbeit</h2><div class="box"><div class="muted small">Durchschnitt pro Woche über die nächsten 52 Wochen, inklusive Tausche und Abwesenheiten. Anteile aus den Pools (z. B. 50 %) sind berücksichtigt. Schnitt aller: ${fmtMin(avg)}</div>${bars(pl,plan.people.map(p=>p.id))}</div>`;
  const tot={},mon={};nameOf={};
  Object.values(checks).forEach(doc=>Object.values(doc||{}).forEach(v=>{
   if(!v||typeof v!=='object'||!v.p)return;
@@ -500,7 +500,7 @@ function viewStats(){
   keys.forEach(k=>{const[yy,mm]=k.split('-');h+=`<tr><td>${MONTHS[+mm-1]} ${yy}</td>${ids.map(id=>`<td>${mon[k][id]?fmtMin(mon[k][id]):'–'}</td>`).join('')}</tr>`});
   h+=`</table></div>`;
  }
- h+=`</div><p class="muted small">Gezählt wird beim Abhaken: Die Minuten gehen an die zuständige Person, im Monat des Abhakens. Tägliche Aufgaben zählen pro Tag.</p>`;
+ h+=`</div><p class="muted small">Gezählt wird beim Abhaken: Die Minuten gehen an die zuständige Person, im Monat des Abhakens. Tägliche Aufgaben zählen pro Tag, Zusatzaufgaben beim Buchen.</p>`;
  return h+viewTypes()+viewMoney();
 }
 function whoLabel(t){return t.person&&person(t.person)?`<span class="small">${esc(person(t.person).name)}</span>`:'<span class="tag">Pool</span>'}
@@ -808,7 +808,7 @@ function chartSvg(keys,data,ids){
 function viewMoney(){
  const wal=plan.people.filter(p=>p.wallet),el=earningsList();
  let h=`<h2>Geldkonten</h2>`;
- if(!wal.length&&!el.length)return h+`<div class="box muted small">Noch kein Geldkonto aktiv. Unter <b>Bearbeiten</b> kannst du bei einer Person „Geldkonto“ anhaken und bei Aufgaben einen Stundenlohn eintragen.</div>`;
+ if(!wal.length&&!el.length)return h+`<div class="box muted small">Noch kein Geldkonto aktiv. Unter <b>Bearbeiten → Personen</b> kannst du bei einer Person „Geldkonto“ anhaken und unter <b>Bearbeiten → Aufgaben</b> einen Stundenlohn eintragen.</div>`;
  h+=`<div class="box">`+wal.map(p=>{const b=balance(p.id);return `<div class="ti"><span class="dot" style="background:${p.color}"></span><b class="sp">${esc(p.name)}</b><span class="money ${b<0?'neg':''}">${eur(b)}</span><button class="btn sm" data-a="payout" data-v="${p.id}">Ausbezahlt</button></div>`}).join('')+(wal.length?'':'<div class="muted small">Kein Geldkonto aktiv.</div>')+`</div>`;
  const keys=periodKeys(),data={},ids=[];
  el.forEach(v=>{const k=keyOf(v.t);(data[k]=data[k]||{})[v.p]=((data[k]||{})[v.p]||0)+(+v.e);if(!ids.includes(v.p))ids.push(v.p)});
@@ -856,16 +856,19 @@ async function importBackup(file){
 }
 const TOUR=[
  {tab:'week',t:'Willkommen',x:'In ein paar Schritten siehst du, was die Seite kann. Du kannst die Führung jederzeit beenden und später über das Fragezeichen oben wieder starten.'},
+ {tab:'week',sel:'#meBtn',t:'Wer bist du?',x:'Oben rechts steht, wer dieses Gerät benutzt. Danach richten sich die Startansicht, das Tauschen und das Logbuch. Tippe darauf, um zu wechseln.'},
  {tab:'week',sel:'.chips',t:'Personen',x:'Hier wählst du, wessen Aufgaben du sehen willst. „Alle“ zeigt den ganzen Haushalt.'},
- {tab:'week',sel:'.cal',t:'Kalender mit Ampel',x:'Jede Kalenderwoche ist grün, wenn alles erledigt ist, rot, wenn noch etwas offen ist, und grau, wenn sie noch kommt. Tippe auf eine Woche, um sie unten anzuzeigen.'},
- {tab:'week',sel:'.task',t:'Abhaken',x:'Erledigte Aufgaben hakst du ab. Bei täglichen Aufgaben gibt es ein Feld pro Tag. Unter „Was ist zu tun?“ stehen die einzelnen Schritte.'},
- {tab:'swap',sel:'.box',t:'Tauschen',x:'Wähle einmal pro Gerät aus, wer du bist. Dann kannst du Aufgaben zum Tausch anbieten und auf Angebote anderer antworten. Getauscht wird erst, wenn beide zugestimmt haben.'},
- {tab:'stats',sel:'h2',t:'Auswertung',x:'Hier siehst du die geplante Arbeit pro Person, die erledigten Minuten im Monat und insgesamt sowie den Verlauf aller Monate.'},
+ {tab:'week',sel:'.cal',t:'Kalender mit Ampel',x:'Jede Kalenderwoche ist grün, wenn alles erledigt ist, rot, wenn noch etwas offen ist, und grau, wenn sie noch kommt. Tippe auf eine Woche, um sie unten anzuzeigen. Über „Im Kalender eintragen“ übernimmst du die Termine in deinen Handykalender.'},
+ {tab:'week',sel:'.task',t:'Abhaken',x:'Erledigte Aufgaben hakst du ab, bei täglichen Aufgaben gibt es ein Feld pro Tag. Unter „Was ist zu tun?“ stehen die einzelnen Schritte. Liegen gebliebene Aufgaben erscheinen oben unter „Noch offen aus Vorwochen“.'},
+ {tab:'week',sel:'#flexBox',t:'Zusatzaufgaben',x:'Flexible Aufgaben wie „Auto waschen“ sind nicht eingeplant. Wer sie erledigt, bucht sie hier mit „Erledigt“. Die Zeit zählt in der Auswertung und, falls eingestellt, auch für die faire Verteilung.'},
+ {tab:'swap',sel:'.box',t:'Tauschen',x:'In der Wochenansicht bietest du eine deiner Aufgaben mit „Tauschen“ an. Andere machen ein Gegenangebot aus einer beliebigen künftigen Woche, du nimmst eins an. Mit „Bescheid geben“ schickst du die Info per WhatsApp, Signal & Co.'},
+ {tab:'stats',sel:'h2',t:'Auswertung',x:'Hier siehst du die geplante Arbeit pro Person, die erledigten Minuten im Monat und insgesamt, den Monatsverlauf sowie die Zeit nach Art (fest, Pool, flexibel) und je Aufgabe.'},
  {tab:'stats',sel:'.seg',t:'Geldkonto und Verdienst',x:'Personen mit Geldkonto bekommen für bezahlte Aufgaben Lohn gutgeschrieben. Die Grafik zeigt den Verdienst pro Woche, Monat oder Jahr. Mit „Ausbezahlt“ setzt du ein Konto auf null.'},
- {tab:'edit',et:'tasks',sel:'.box',t:'Aufgaben bearbeiten',x:'Jede Aufgabe ist fest (immer dieselbe Person), im Pool (fair verteilt) oder flexibel (jederzeit buchbar). Dazu Dauer, Intervall, Stundenlohn und die einzelnen Schritte.'},
- {tab:'edit',et:'pools',sel:'.box',t:'Pools',x:'Pools sind Personenkreise mit eigener fairer Verteilung. Pro Person stellst du den Anteil ein, z. B. Kinder 50 %.'},
- {tab:'edit',et:'people',sel:'[data-wallet]',t:'Personen, Urlaub, Geldkonto',x:'Hier verwaltest du die Personen, trägst Abwesenheiten ein und schaltest das Geldkonto ein oder aus.'},
- {tab:'edit',et:'log',sel:'.log',t:'Logbuch, Sicherung, Zugang',x:'Das Logbuch zeigt jede Änderung an Aufgaben und Personen. Darunter findest du Sicherung, Einladungscode und Abmelden. Viel Spaß!'}
+ {tab:'edit',et:'tasks',sel:'.box',t:'Aufgaben',x:'Jede Aufgabe ist fest (immer dieselbe Person), im Pool (fair verteilt, auf Wunsch nur für bestimmte Personen) oder flexibel (jederzeit buchbar). Dazu kommen Dauer, Intervall, Stundenlohn und die Schritte.'},
+ {tab:'edit',et:'pools',sel:'.box',t:'Pools',x:'Pools sind Personenkreise mit eigener fairer Verteilung, z. B. „Erwachsene“ und „Kinder“. Pro Person stellst du den Anteil ein: 50 % heißt halb so viel Zeit wie die anderen.'},
+ {tab:'edit',et:'people',sel:'[data-wallet]',t:'Personen, Urlaub, Geldkonto',x:'Hier verwaltest du die Personen, trägst Abwesenheiten ein (dann übernehmen die anderen) und schaltest das Geldkonto ein oder aus.'},
+ {tab:'edit',et:'house',sel:'.code',t:'Haushalt und Zugang',x:'Hier findest du Name und Planstart, den Einladungscode, die Konten im Haushalt, Sicherung, Impressum, Datenschutz und „Konto löschen“.'},
+ {tab:'edit',et:'log',sel:'.log',t:'Logbuch',x:'Das Logbuch zeigt jede Änderung an Aufgaben, Pools, Personen und Abwesenheiten mit Datum und Person. Viel Spaß!'}
 ];
 function tourGo(){if(tour>=TOUR.length){tour=null;try{localStorage.setItem('hh_tour','1')}catch(e){}render();return}const s=TOUR[tour];if(s&&s.tab){edit=null;poolEdit=null;tab=s.tab;if(s.et)editTab=s.et}render()}
 function tourHtml(){
@@ -877,7 +880,7 @@ function tourHtml(){
 }
 function tourHighlight(){
  if(tour===null||tour<0)return;const s=TOUR[tour];if(!s||!s.sel)return;
- let el=document.querySelector('#app '+s.sel);if(!el)return;
+ let el=s.sel.startsWith('#')?document.querySelector(s.sel):document.querySelector('#app '+s.sel);if(!el)return;
  if(s.sel==='[data-wallet]'||s.sel==='.log')el=el.closest('.box')||el;
  el.classList.add('tour-hl');try{el.scrollIntoView({block:'center',behavior:'smooth'})}catch(e){}
 }
@@ -1026,7 +1029,7 @@ function viewAccess(){
 function viewFlex(i){
  const fl=plan.tasks.filter(t=>t.mode==='flex');if(!fl.length)return '';
  const nw=nowWeek(),can=i>=0&&i<=nw,recs=Object.entries(checks[wid(i)]||{}).filter(([k,v])=>v&&v.q==='flex'&&(sel==='all'||v.p===sel));
- let h=`<div class="box"><div class="ph"><h3>Zusatzaufgaben</h3><span class="sp"></span><span class="muted small">jederzeit buchbar</span></div>`;
+ let h=`<div class="box" id="flexBox"><div class="ph"><h3>Zusatzaufgaben</h3><span class="sp"></span><span class="muted small">jederzeit buchbar</span></div>`;
  fl.forEach(t=>{h+=`<div class="task"><div class="row"><span class="sp">${esc(t.name)}</span><span class="muted small">${t.min} Min${+t.wage>0?', '+eur(t.min/60*t.wage):''}</span>${can?`<button class="btn sm pri" data-a="flexDo" data-t="${t.id}">Erledigt</button>`:''}</div>${t.steps&&t.steps.length?`<details style="margin-left:0"><summary>Was ist zu tun?</summary><ul>${t.steps.map(x=>`<li>${esc(x)}</li>`).join('')}</ul></details>`:''}</div>`});
  if(!can)h+=`<div class="muted small" style="margin-top:6px">Buchen geht nur in der aktuellen oder einer vergangenen Woche.</div>`;
  if(recs.length)h+=`<div class="muted small" style="margin-top:10px">Diese Woche gebucht:</div>`+recs.map(([k,v])=>`<div class="ti"><span class="dot" style="background:${pcol(v.p)}"></span><span class="sp small">${esc(v.n)}, ${esc(pname(v.p))}<span class="muted"> · ${fmtD(v.t)}</span></span><span class="muted small">${v.m} Min</span><button class="icon" data-a="flexUndo" data-w="${i}" data-k="${esc(k)}" aria-label="Buchung löschen">✕</button></div>`).join('');
