@@ -11,7 +11,6 @@
 <meta name="apple-mobile-web-app-title" content="Haushalt">
 <link rel="manifest" href="manifest.json">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
-<script>if('serviceWorker' in navigator)navigator.serviceWorker.register('sw.js').catch(e=>console.warn(e))</script>
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🏠</text></svg>">
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
@@ -154,13 +153,16 @@ const COLORS=['#2b5d8a','#c0563f','#2e8a5a','#8456b0','#c28a1e','#21918f','#b548
 const WD=['Mo','Di','Mi','Do','Fr','Sa','So'];
 const MONTHS=['Januar','Februar','März','April','Mai','Juni','Juli','August','September','Oktober','November','Dezember'];
 const DAY=864e5;
-const APP_VERSION='5.1';
-const DATA_VERSION=3;
-const CHANGELOG={'5.1':['Die App startet jetzt auch ohne Internet','Offline abgehakte Aufgaben werden automatisch synchronisiert, sobald wieder Netz da ist'],'5.0':['Beim Start „Wer bist du?“: Die Seite zeigt zuerst deine Aufgaben','„Noch offen aus Vorwochen“ in der aktuellen Woche','Eigene Dialoge und „Rückgängig“ nach dem Abhaken','Vergangene Wochen bleiben fest, auch wenn der Plan geändert wird','Tauschangebote per WhatsApp, Signal & Co. teilen','Mitglieder verwalten, Einladungscode erneuern, Haushalt verlassen','Als App auf dem Home-Bildschirm installierbar'],'4.2':['Kalender-Export funktioniert jetzt auch auf Android','Erklärungen zum Kalender-Export und zur Anmeldung'],'4.1':['Kalender-Export: Aufgaben als Termine in den iPhone- oder Google-Kalender übernehmen','Hinweis zum Einladungscode auf der Anmeldeseite'],'4.0':['Geldkonto pro Person mit Stundenlohn je Aufgabe','Verdienst-Grafik nach Woche, Monat oder Jahr','Logbuch für Änderungen an Aufgaben und Personen','Führung durch die Funktionen (Fragezeichen oben)','Sicherung herunterladen und einspielen']};
+const APP_VERSION='6.0';
+const DATA_VERSION=4;
+const CHANGELOG={'6.0':['Mehrere Pools mit eigenem Personenkreis','Anteil pro Person im Pool, z. B. Kinder 50 %','Teilnehmer pro Aufgabe festlegen','Abwesenheit/Urlaub: der Pool verteilt automatisch um','Flexible Zusatzaufgaben, jederzeit buchbar','Auswertung nach festen, Pool- und flexiblen Aufgaben','Bearbeiten in Unterbereiche gegliedert','Impressum, Datenschutz und „Konto löschen“'],'5.0':['Beim Start „Wer bist du?“: Die Seite zeigt zuerst deine Aufgaben','„Noch offen aus Vorwochen“ in der aktuellen Woche','Eigene Dialoge und „Rückgängig“ nach dem Abhaken','Vergangene Wochen bleiben fest, auch wenn der Plan geändert wird','Tauschangebote per WhatsApp, Signal & Co. teilen','Mitglieder verwalten, Einladungscode erneuern, Haushalt verlassen','Als App auf dem Home-Bildschirm installierbar'],'4.2':['Kalender-Export funktioniert jetzt auch auf Android','Erklärungen zum Kalender-Export und zur Anmeldung'],'4.1':['Kalender-Export: Aufgaben als Termine in den iPhone- oder Google-Kalender übernehmen','Hinweis zum Einladungscode auf der Anmeldeseite'],'4.0':['Geldkonto pro Person mit Stundenlohn je Aufgabe','Verdienst-Grafik nach Woche, Monat oder Jahr','Logbuch für Änderungen an Aufgaben und Personen','Führung durch die Funktionen (Fragezeichen oben)','Sicherung herunterladen und einspielen']};
 const eur=v=>(Math.round((+v||0)*100)/100).toLocaleString('de-DE',{style:'currency',currency:'EUR'});
 const r2=v=>Math.round(v*100)/100;
+const WEIGHTS=[[0,'nicht dabei'],[0.25,'25 %'],[0.5,'50 %'],[0.75,'75 %'],[1,'100 %'],[1.5,'150 %'],[2,'200 %']];
+/* Betreiberangaben für Impressum und Datenschutz – bitte vervollständigen */
+const OPERATOR={name:'Bernd Klein',street:'[Straße und Hausnummer]',city:'[PLZ] Reutlingen',email:'berndklein@ymail.com',updated:'Oktober 2026'};
 const BAD=['Spiegel putzen','Waschbecken und Armatur reinigen','Toilette putzen','Dusche/Wanne reinigen','Boden wischen'];
-function T(id,name,min,iv,off,steps){return{id,name,min,iv,person:'',off,steps}}
+function T(id,name,min,iv,off,steps){return{id,name,min,iv,mode:'pool',pool:'all',who:[],person:'',wage:0,off,steps}}
 const TEMPLATE=[
  T('bad','Bad putzen',30,'weekly',0,BAD.slice()),
  T('kueche','Küche putzen',30,'weekly',0,['Arbeitsflächen abwischen','Herd und Spüle reinigen','Boden wischen']),
@@ -173,9 +175,9 @@ const TEMPLATE=[
 
 firebase.initializeApp(firebaseConfig);
 const db=firebase.firestore(),auth=firebase.auth(),FV=firebase.firestore.FieldValue;
-db.enablePersistence({synchronizeTabs:true}).catch(e=>console.warn('Offline-Speicher nicht verfügbar',e));
 let user=null,hid=null,mode='loading',unsubs=[],authMsg='',busy=false;
 let calOpen=false,calCfg={who:'',weeks:12,day:5,daily:false,alarm:true},migrating=false,payouts=[],logs=[],tour=null,newVer=null,period='month',whatsNew=null;
+let editTab='tasks',poolEdit=null,awayFor=null,legal=null,lf={em:'',pw:''};
 let plan=null,checks={},swaps=[],assignCache=null,edit=null,tab='week',sel='all',me=null,curWeek=0,viewMonth=null,nameOf={};
 try{tab=localStorage.getItem('hh_tab')||'week';sel=localStorage.getItem('hh_sel')||'all'}catch(e){}
 function persist(){try{localStorage.setItem('hh_tab',tab);localStorage.setItem('hh_sel',sel);if(hid)localStorage.setItem('hh_me_'+hid,me||'')}catch(e){}}
@@ -206,20 +208,45 @@ function due(t,i){if(i<0)return false;const n=(IV[t.iv]||IV.weekly).n;return(((i
 function weekMin(t){return t.iv==='daily'?t.min*7:t.min}
 function baseAssign(i){
  if(i<0||i>5200||!plan.people.length)return[];
- const ppl=plan.people,ids=new Set(ppl.map(p=>p.id));
- if(!assignCache){assignCache={weeks:[],load:{}};ppl.forEach(p=>assignCache.load[p.id]=0)}
- const C=assignCache;
+ if(!assignCache){const G={},PL={};plan.people.forEach(p=>G[p.id]=0);plan.pools.forEach(q=>{PL[q.id]={};plan.people.forEach(p=>PL[q.id][p.id]=0)});assignCache={weeks:[],G,PL}}
+ const C=assignCache,G=C.G,PL=C.PL,ppl=plan.people,ids=new Set(ppl.map(p=>p.id)),order=ppl.map(p=>p.id);
+ const addFlex=w=>flexInWeek(w).forEach(v=>{if(v.f&&G[v.p]!==undefined)G[v.p]+=+v.m||0});
  while(C.weeks.length<=i){
   const w=C.weeks.length,fz=frozenList(wid(w));
-  if(fz){fz.forEach(x=>{if(C.load[x.p]!==undefined)C.load[x.p]+=weekMin(x.t)});C.weeks.push(fz);continue}
-  const list=[],tasks=plan.tasks.filter(t=>due(t,w));
-  tasks.forEach(t=>{if(t.person&&ids.has(t.person)){list.push({t,p:t.person});C.load[t.person]+=weekMin(t)}});
-  const pool=tasks.filter(t=>!(t.person&&ids.has(t.person))).sort((a,b)=>weekMin(b)-weekMin(a)||a.id.localeCompare(b.id));
-  pool.forEach(t=>{let best=null,bv=Infinity;for(let k=0;k<ppl.length;k++){const p=ppl[(k+w)%ppl.length].id;if(C.load[p]<bv-1e-9){bv=C.load[p];best=p}}list.push({t,p:best});C.load[best]+=weekMin(t)});
-  C.weeks.push(list);
+  if(fz){fz.forEach(x=>{const m=weekMin(x.t);if(G[x.p]!==undefined)G[x.p]+=m;if(x.q&&PL[x.q]&&PL[x.q][x.p]!==undefined)PL[x.q][x.p]+=m});C.weeks.push(fz);addFlex(w);continue}
+  const present=order.filter(p=>!isAway(p,w)),pres=new Set(present),G0=Object.assign({},G),PL0=JSON.parse(JSON.stringify(PL));
+  const list=[],rest=[];
+  plan.tasks.filter(t=>t.mode!=='flex'&&due(t,w)).forEach(t=>{if(t.mode==='fix'&&ids.has(t.person)&&pres.has(t.person)){list.push({t,p:t.person,q:'fix'});G[t.person]+=weekMin(t)}else rest.push(t)});
+  rest.sort((a,b)=>weekMin(b)-weekMin(a)||a.id.localeCompare(b.id)).forEach(t=>{
+   const q=t.mode==='pool'?poolById(t.pool):plan.pools[0],mem=poolMembers(q);
+   let cand=Object.keys(mem).filter(p=>pres.has(p)&&(!t.who||!t.who.length||t.who.includes(p)));
+   if(!cand.length)cand=Object.keys(mem).filter(p=>pres.has(p));
+   if(!cand.length)cand=present.slice();
+   if(!cand.length)cand=[ids.has(t.person)?t.person:order[0]];
+   let best=cand[0],bv=Infinity;
+   for(let k=0;k<order.length;k++){const p=order[(k+w)%order.length];if(!cand.includes(p))continue;const v=(q.other!==false?G[p]:PL[q.id][p])/(mem[p]||1);if(v<bv-1e-9){bv=v;best=p}}
+   const m=weekMin(t);list.push({t,p:best,q:q.id});G[best]+=m;PL[q.id][best]=(PL[q.id][best]||0)+m;
+  });
+  const absent=order.filter(p=>!pres.has(p));
+  if(absent.length&&present.length){
+   const avg=present.reduce((s,p)=>s+(G[p]-G0[p]),0)/present.length;absent.forEach(a=>{G[a]+=avg});
+   plan.pools.forEach(q=>{const mem=poolMembers(q),pm=present.filter(p=>mem[p]);if(!pm.length)return;const r=pm.reduce((s,p)=>s+(PL[q.id][p]-PL0[q.id][p])/mem[p],0)/pm.length;absent.forEach(a=>{if(mem[a])PL[q.id][a]+=r*mem[a]})});
+  }
+  C.weeks.push(list);addFlex(w);
  }
  return C.weeks[i];
 }
+function normalize(P){
+ P.people=(P.people||[]).map(p=>Object.assign({wallet:false,away:[]},p));
+ P.pools=(P.pools&&P.pools.length)?P.pools.map(q=>Object.assign({def:0,w:{},other:true},q)):[{id:'all',name:'Alle',def:1,w:{},other:true}];
+ P.tasks=(P.tasks||[]).map(t=>{const x=Object.assign({wage:0,who:[],steps:[]},t);if(!x.mode)x.mode=x.person?'fix':'pool';if(!P.pools.some(q=>q.id===x.pool))x.pool=P.pools[0].id;return x});
+ return P;
+}
+function poolById(id){return plan.pools.find(q=>q.id===id)||plan.pools[0]}
+function poolMembers(q){const m={};plan.people.forEach(p=>{const w=q.w&&q.w[p.id]!=null?+q.w[p.id]:+(q.def||0);if(w>0)m[p.id]=w});return m}
+function isAway(pid,w){const p=person(pid);if(!p||!p.away||!p.away.length)return false;const mon=weekMon(w);let d=0;for(let k=0;k<7;k++){const x=iso(new Date(mon.getFullYear(),mon.getMonth(),mon.getDate()+k));if(p.away.some(a=>a.f<=x&&x<=a.t))d++}return d>=4}
+function flexInWeek(w){const out=[];Object.values(checks[wid(w)]||{}).forEach(v=>{if(v&&typeof v==='object'&&v.q==='flex')out.push(v)});return out}
+function fmtD(s){const[y,m,d]=String(s).split('-');return +d+'.'+(+m)+'.'+y.slice(2)}
 function assign(i){
  const o=plan.over||{},w=i>=0?wid(i):'',b=baseAssign(i);
  if(b.length&&b[0].fz)return b;
@@ -253,13 +280,13 @@ function setStatus(c,txt){const s=$('#st');s.className='status '+c;s.querySelect
 function fail(e){console.error(e);setStatus('err','Speichern fehlgeschlagen');uiAlert('Speichern fehlgeschlagen: '+(e&&e.message||e),'Fehler')}
 function savePlan(){
  assignCache=null;render();
- H().update(JSON.parse(JSON.stringify({name:plan.name,people:plan.people,tasks:plan.tasks,start:plan.start}))).then(()=>setStatus('ok','Synchronisiert')).catch(fail);
+ H().update(JSON.parse(JSON.stringify({name:plan.name,people:plan.people,tasks:plan.tasks,pools:plan.pools,start:plan.start}))).then(()=>setStatus('ok','Synchronisiert')).catch(fail);
 }
 function toggle(i,t,p,k){
  const id=wid(i),on=!!rec(i,k);checks[id]=checks[id]||{};
  let val;
  if(on){delete checks[id][k];val=FV.delete()}
- else{const pp=person(p)||{};val={p,pn:pp.name||'',m:t.min,n:t.name,t:iso(new Date())};if(pp.wallet&&+t.wage>0)val.e=r2(t.min/60*t.wage);checks[id][k]=val;const dk=k.split('_')[1];toast('Erledigt: '+t.name+(dk!==undefined?' ('+WD[+dk]+')':'')+(val.e?', +'+eur(val.e):''),'Rückgängig',()=>{if(rec(i,k))toggle(i,t,p,k)})}
+ else{const pp=person(p)||{},ax=assign(i).find(x=>x.t.id===t.id);val={p,pn:pp.name||'',m:t.min,n:t.name,t:iso(new Date()),q:ax&&ax.q?ax.q:(t.mode==='fix'?'fix':t.pool),ti:t.id};if(pp.wallet&&+t.wage>0)val.e=r2(t.min/60*t.wage);checks[id][k]=val;const dk=k.split('_')[1];toast('Erledigt: '+t.name+(dk!==undefined?' ('+WD[+dk]+')':'')+(val.e?', +'+eur(val.e):''),'Rückgängig',()=>{if(rec(i,k))toggle(i,t,p,k)})}
  render();
  H().collection('checks').doc(id).set({[k]:val},{merge:true}).catch(fail);
 }
@@ -269,7 +296,7 @@ const AUTH_ERR={'auth/invalid-credential':'E-Mail oder Passwort stimmt nicht.','
 function authErr(e){return AUTH_ERR[e&&e.code]||(e&&e.message)||'Unbekannter Fehler'}
 function stopAll(){unsubs.forEach(u=>{try{u()}catch(e){}});unsubs=[]}
 auth.onAuthStateChanged(async u=>{
- stopAll();user=u;plan=null;checks={};swaps=[];payouts=[];logs=[];tour=null;hid=null;edit=null;assignCache=null;
+ stopAll();user=u;if(u)lf={em:'',pw:''};plan=null;checks={};swaps=[];payouts=[];logs=[];tour=null;hid=null;edit=null;assignCache=null;
  if(!u){mode='login';setStatus('','Abgemeldet');render();return}
  mode='loading';render();
  try{const s=await db.collection('users').doc(u.uid).get();hid=s.exists?s.data().hid:null}
@@ -281,14 +308,14 @@ function startHousehold(){
  try{me=localStorage.getItem('hh_me_'+hid)||null}catch(e){}
  unsubs.push(H().onSnapshot({includeMetadataChanges:true},snap=>{
   if(!snap.exists){authMsg='Dieser Haushalt existiert nicht mehr.';mode='setup';render();return}
-  const first=!plan;plan=snap.data();plan.people=plan.people||[];plan.tasks=plan.tasks||[];plan.over=plan.over||{};plan.start=plan.start||iso(mondayOf(new Date()));
+  const first=!plan;plan=normalize(snap.data());plan.over=plan.over||{};plan.start=plan.start||iso(mondayOf(new Date()));
   assignCache=null;if(me&&!person(me))me=null;
   if(!snap.metadata.fromCache&&!snap.metadata.hasPendingWrites&&(plan.dataVersion||1)<DATA_VERSION&&!migrating){migrating=true;migrate()}
   if(first){mode='app';curWeek=nowWeek();const n=new Date();viewMonth=new Date(n.getFullYear(),n.getMonth(),1);afterFirstLoad()}
   setStatus(snap.metadata.fromCache?'':'ok',snap.metadata.fromCache?'Offline':'Synchronisiert');
   first?render():softRender();
  },e=>{console.error(e);if(e&&e.code==='permission-denied'){db.collection('users').doc(user.uid).set({hid:null,email:user.email||''}).catch(()=>{});stopAll();plan=null;hid=null;authMsg='Du bist nicht mehr Mitglied dieses Haushalts. Lege einen neuen an oder tritt mit einem Code bei.';mode='setup';render()}else setStatus('err','Kein Zugriff auf den Haushalt')}));
- unsubs.push(H().collection('checks').onSnapshot(qs=>{const c={};qs.forEach(d=>{c[d.id]=d.data()});checks=c;if(plan)softRender()},e=>console.error(e)));
+ unsubs.push(H().collection('checks').onSnapshot(qs=>{const c={};qs.forEach(d=>{c[d.id]=d.data()});checks=c;assignCache=null;if(plan)softRender()},e=>console.error(e)));
  unsubs.push(H().collection('swaps').onSnapshot(qs=>{swaps=qs.docs.map(d=>Object.assign({id:d.id},d.data()));if(plan)softRender()},e=>console.error(e)));
  unsubs.push(H().collection('payouts').onSnapshot(qs=>{payouts=qs.docs.map(d=>Object.assign({id:d.id},d.data()));if(plan)softRender()},e=>console.error(e)));
  unsubs.push(H().collection('log').orderBy('ts','desc').limit(100).onSnapshot(qs=>{logs=qs.docs.map(d=>d.data());if(plan)softRender()},e=>console.error(e)));
@@ -296,12 +323,12 @@ function startHousehold(){
 function genCode(){const A='ABCDEFGHJKLMNPQRSTUVWXYZ23456789';let s='';for(let i=0;i<8;i++)s+=A[Math.floor(Math.random()*A.length)];return s}
 async function createHousehold(name,importOld){
  const ref=db.collection('households').doc(),code=genCode();
- let data={name:name||'Unser Haushalt',code,members:[user.uid],start:iso(mondayOf(new Date())),people:[],tasks:JSON.parse(JSON.stringify(TEMPLATE)),over:{},frozen:{},memberInfo:{[user.uid]:user.email||''},created:iso(new Date()),dataVersion:DATA_VERSION};
+ let data={name:name||'Unser Haushalt',code,members:[user.uid],start:iso(mondayOf(new Date())),people:[],pools:[{id:'all',name:'Alle',def:1,w:{},other:true}],tasks:JSON.parse(JSON.stringify(TEMPLATE)),over:{},frozen:{},memberInfo:{[user.uid]:user.email||''},created:iso(new Date()),dataVersion:DATA_VERSION};
  let oldChecks=[];
  if(importOld){
   const o=await db.collection('config').doc('plan').get();
   if(!o.exists)throw new Error('In der alten Version wurde kein Plan gefunden.');
-  const od=o.data();data.people=(od.people||[]).map(p=>Object.assign({wallet:false},p));data.tasks=(od.tasks||[]).map(t=>Object.assign({wage:0},t));data.start=od.start||data.start;
+  const od=o.data();data.people=(od.people||[]).map(p=>Object.assign({wallet:false},p));data.tasks=normalize({people:data.people,tasks:od.tasks||[],pools:data.pools}).tasks;data.start=od.start||data.start;
   (await db.collection('checks').get()).forEach(d=>oldChecks.push([d.id,d.data()]));
  }
  const b=db.batch();
@@ -322,7 +349,8 @@ async function joinHousehold(code){
 
 /* Ansicht */
 function render(){
- const app=$('#app');updateMe();$('#ttl').textContent=plan&&plan.name?plan.name:'Haushaltsplan';
+ const app=$('#app');updateMe();
+ if(legal){app.innerHTML=viewLegal();return}$('#ttl').textContent=plan&&plan.name?plan.name:'Haushaltsplan';
  if(mode==='loading'){app.innerHTML='<p class="muted">Lade…</p>';return}
  if(mode==='login'){app.innerHTML=viewLogin();return}
  if(mode==='setup'){app.innerHTML=viewSetup();return}
@@ -334,33 +362,33 @@ function render(){
  app.innerHTML=h+tourHtml();
  tourHighlight();
 }
-function softRender(){const a=document.activeElement;if(edit||(a&&/^(INPUT|SELECT|TEXTAREA)$/.test(a.tagName)&&!/^(checkbox|file|button)$/.test(a.type)))return;render()}
+function softRender(){const a=document.activeElement;if(legal||edit||poolEdit||(a&&/^(INPUT|SELECT|TEXTAREA)$/.test(a.tagName)&&!/^(checkbox|file|button)$/.test(a.type)))return;render()}
 function viewLogin(){
  return `<h2>Anmelden</h2><div class="box">
- <label class="f" for="em">E-Mail</label><input id="em" class="inp" type="email" autocomplete="username" inputmode="email">
- <label class="f" for="pw">Passwort</label><input id="pw" class="inp" type="password" autocomplete="current-password">
+ <label class="f" for="em">E-Mail</label><input id="em" class="inp" type="email" autocomplete="username" inputmode="email" value="${esc(lf.em)}">
+ <label class="f" for="pw">Passwort</label><input id="pw" class="inp" type="password" autocomplete="current-password" value="${esc(lf.pw)}">
  <label class="cb" style="margin-top:8px;font-size:13px"><input type="checkbox" id="pwShow"> Passwort anzeigen</label>
  ${authMsg?`<div class="err">${esc(authMsg)}</div>`:''}
  <button class="btn pri wide" data-a="login" ${busy?'disabled':''}>Anmelden</button>
  <button class="btn wide" data-a="signup" ${busy?'disabled':''}>Neues Konto erstellen</button>
+ <label class="cb" style="font-size:13px"><input type="checkbox" id="consent" ${lf.ok?'checked':''}> <span>Für neue Konten: Ich habe die <button class="link" style="padding:0;font-size:13px" data-a="legal" data-v="ds">Datenschutzerklärung</button> gelesen.</span></label>
  <button class="link" data-a="reset">Passwort vergessen?</button></div>
  <h2>So funktioniert die Anmeldung</h2><div class="box small">
  <p style="margin:0 0 10px"><b>Euer Haushalt ist schon eingerichtet?</b><br><span class="muted">Gib die gemeinsamen Zugangsdaten eures Haushalts ein (E-Mail und Passwort) und tippe auf „Anmelden“. Die Daten bekommst du von der Person, die den Haushalt angelegt hat.</span></p>
  <p style="margin:0 0 10px"><b>Du hast einen Einladungscode?</b><br><span class="muted">Der Code ist kein Passwort. Gib deine eigene E-Mail und ein neues Passwort ein (mindestens 6 Zeichen) und tippe auf „Neues Konto erstellen“. Auf der nächsten Seite trägst du den Code bei „Einem Haushalt beitreten“ ein.</span></p>
  <p style="margin:0 0 10px"><b>Du willst einen neuen Haushalt gründen?</b><br><span class="muted">E-Mail und neues Passwort eingeben, „Neues Konto erstellen“ tippen und auf der nächsten Seite einen Namen für den Haushalt vergeben. Danach findest du unter Bearbeiten den Einladungscode und kannst die Zugangsdaten an alle weitergeben.</span></p>
  <p style="margin:0"><b>Passwort vergessen?</b><br><span class="muted">E-Mail oben eintragen und auf „Passwort vergessen?“ tippen. Du bekommst eine E-Mail zum Zurücksetzen, schau auch im Spam-Ordner nach.</span></p></div>
- `;
+ ${legalLinks()}`;
 }
 function viewSetup(){
  return `<div class="box"><div class="muted small">Angemeldet als ${esc(user&&user.email)}</div>${authMsg?`<div class="err">${esc(authMsg)}</div>`:''}</div>
  <h2>Neuen Haushalt anlegen</h2><div class="box">
  <label class="f" for="hn">Name des Haushalts</label><input id="hn" class="inp" placeholder="z. B. Familie Klein oder WG Uhlandstraße" autocomplete="off">
- <label class="cb"><input type="checkbox" id="imp"> <span>Plan und Häkchen aus der bisherigen Version übernehmen</span></label>
  <button class="btn pri wide" data-a="create" ${busy?'disabled':''}>Haushalt anlegen</button></div>
  <h2>Einem Haushalt beitreten</h2><div class="box">
  <label class="f" for="jc">Einladungscode</label><input id="jc" class="inp" placeholder="8 Zeichen" autocomplete="off" autocapitalize="characters">
  <button class="btn wide" data-a="join" ${busy?'disabled':''}>Beitreten</button></div>
- <div style="margin-top:14px"><button class="btn del" data-a="logout">Abmelden</button></div>`;
+ <div style="margin-top:14px"><button class="btn del" data-a="logout">Abmelden</button></div>${legalLinks()}`;
 }
 function chips(){
  return `<div class="chips"><button class="chip ${sel==='all'?'on':''}" data-a="sel" data-v="all">Alle</button>${plan.people.map(p=>`<button class="chip ${sel===p.id?'on':''}" data-a="sel" data-v="${p.id}"><span class="dot" style="background:${p.color}"></span>${esc(p.name)}</button>`).join('')}</div>`;
@@ -389,7 +417,7 @@ function viewWeek(){
  if(i===nw)h+=viewOverdue(ppl);
  ppl.forEach(p=>{
   const mine=a.filter(x=>x.p===p.id),s=status(i,p.id),tot=mine.reduce((n,x)=>n+weekMin(x.t),0);
-  h+=`<div class="box"><div class="ph"><span class="dot" style="background:${p.color}"></span><h3>${esc(p.name)}</h3><span class="muted small">${fmtMin(tot)}</span><span class="sp"></span>${s?`<span class="badge ${s}">${s==='done'?'erledigt':s==='open'?'offen':'kommt noch'}</span>`:''}</div>`;
+  h+=`<div class="box"><div class="ph"><span class="dot" style="background:${p.color}"></span><h3>${esc(p.name)}</h3><span class="muted small">${fmtMin(tot)}</span>${isAway(p.id,i)?'<span class="tag">abwesend</span>':''}<span class="sp"></span>${s?`<span class="badge ${s}">${s==='done'?'erledigt':s==='open'?'offen':'kommt noch'}</span>`:''}</div>`;
   if(!mine.length)h+=`<div class="muted small">Diese Woche nichts zu tun.</div>`;
   mine.forEach(({t,sw})=>{
    const daily=t.iv==='daily',ok=keysFor(t).every(k=>rec(i,k)),started=keysFor(t).some(k=>rec(i,k)),key=w+'|'+t.id;
@@ -407,6 +435,7 @@ function viewWeek(){
   });
   h+=`</div>`;
  });
+ h+=viewFlex(i);
  if(!me&&plan.people.length>1)h+=`<p class="muted small">Zum Tauschen oben rechts einmal auswählen, wer du bist.</p>`;
  return h;
 }
@@ -472,40 +501,100 @@ function viewStats(){
   h+=`</table></div>`;
  }
  h+=`</div><p class="muted small">Gezählt wird beim Abhaken: Die Minuten gehen an die zuständige Person, im Monat des Abhakens. Tägliche Aufgaben zählen pro Tag.</p>`;
- return h+viewMoney();
+ return h+viewTypes()+viewMoney();
 }
 function whoLabel(t){return t.person&&person(t.person)?`<span class="small">${esc(person(t.person).name)}</span>`:'<span class="tag">Pool</span>'}
 function viewEdit(){
  if(edit)return viewEditor();
- let h=`<h2>Aufgaben</h2><div class="box">`;
- plan.tasks.forEach(t=>{h+=`<div class="ti"><div class="sp"><b>${esc(t.name)}</b><div class="muted small">${t.min} Min, ${(IV[t.iv]||IV.weekly).label}${+t.wage>0?', '+eur(t.wage)+'/Std':''}${t.steps&&t.steps.length?', '+t.steps.length+' Schritte':''}</div></div>${whoLabel(t)}<button class="btn" data-a="edit" data-v="${t.id}">Ändern</button></div>`});
- if(!plan.tasks.length)h+=`<div class="muted">Noch keine Aufgaben. Leg die erste an.</div>`;
- h+=`</div><div style="margin-top:10px"><button class="btn pri" data-a="new">Neue Aufgabe</button></div>`;
- h+=`<h2>Personen</h2><div class="box">`;
- plan.people.forEach(p=>{h+=`<div class="ti"><span class="dot" style="background:${p.color}"></span><div class="sp"><b>${esc(p.name)}</b><label class="cb" style="margin-top:4px;font-size:13px"><input type="checkbox" data-wallet="${p.id}" ${p.wallet?'checked':''}> Geldkonto</label></div><button class="btn sm" data-a="pren" data-v="${p.id}">Umbenennen</button><button class="btn sm del" data-a="pdel" data-v="${p.id}">Entfernen</button></div>`});
- if(!plan.people.length)h+=`<div class="muted small">Noch niemand angelegt.</div>`;
- h+=`<div class="row" style="margin-top:10px"><input id="pName" class="inp" placeholder="Name der neuen Person" autocomplete="off"><button class="btn pri" data-a="padd">Hinzufügen</button></div></div>`;
- h+=`<h2>Haushalt</h2><div class="box"><label class="f" for="hName" style="margin-top:0">Name</label><input id="hName" class="inp" value="${esc(plan.name)}">`;
- h+=`<label class="f" for="startIn">Planstart</label><input id="startIn" type="date" class="inp" value="${esc(plan.start)}"><div class="muted small" style="margin-top:4px">Woche 1 beginnt am Montag dieser Woche. Ab hier werden Pool-Aufgaben fair nach Minuten verteilt.</div></div>`;
- h+=viewEditExtras();
- h+=viewAccess();
+ if(poolEdit)return viewPoolEditor();
+ const tabs=[['tasks','Aufgaben'],['pools','Pools'],['people','Personen'],['house','Haushalt'],['log','Logbuch']];
+ let h=`<div class="chips">${tabs.map(([k,l])=>`<button class="chip ${editTab===k?'on':''}" data-a="etab" data-v="${k}">${l}</button>`).join('')}</div>`;
+ return h+(editTab==='pools'?viewPools():editTab==='people'?viewPeople():editTab==='house'?viewHouse():editTab==='log'?viewLog():viewTaskList());
+}
+function viewTaskList(){
+ const groups=[['Feste Aufgaben',t=>t.mode==='fix'],...plan.pools.map(q=>['Pool: '+q.name,t=>t.mode==='pool'&&t.pool===q.id]),['Flexibel, jederzeit buchbar',t=>t.mode==='flex']];
+ let h='';
+ groups.forEach(([l,f])=>{const list=plan.tasks.filter(f);if(!list.length)return;
+  h+=`<h2>${esc(l)}</h2><div class="box">`+list.map(t=>`<div class="ti"><div class="sp"><b>${esc(t.name)}</b><div class="muted small">${t.min} Min${t.mode==='flex'?'':', '+(IV[t.iv]||IV.weekly).label}${+t.wage>0?', '+eur(t.wage)+'/Std':''}${t.mode==='fix'?', '+esc(pname(t.person)):''}${t.mode==='pool'&&t.who&&t.who.length?', nur '+t.who.map(p=>esc(pname(p))).join(', '):''}${t.steps&&t.steps.length?', '+t.steps.length+' Schritte':''}</div></div><button class="btn sm" data-a="edit" data-v="${t.id}">Ändern</button></div>`).join('')+`</div>`});
+ if(!plan.tasks.length)h+=`<div class="box muted" style="margin-top:12px">Noch keine Aufgaben. Leg die erste an.</div>`;
+ return h+`<div style="margin-top:12px"><button class="btn pri" data-a="new">Neue Aufgabe</button></div>`;
+}
+function viewPools(){
+ let h=`<div class="muted small" style="margin:8px 0 0">Ein Pool ist ein Personenkreis, in dem Aufgaben fair nach Minuten verteilt werden. Pro Person legst du den Anteil fest, z. B. Kinder 50 % (halb so viel Zeit wie die anderen).</div><div class="box">`;
+ plan.pools.forEach((q,ix)=>{const mem=poolMembers(q),n=plan.tasks.filter(t=>t.mode==='pool'&&t.pool===q.id).length;
+  h+=`<div class="ti"><div class="sp"><b>${esc(q.name)}</b>${ix===0?' <span class="tag">Standard</span>':''}<div class="muted small">${Object.entries(mem).map(([p,w])=>esc(pname(p))+(w!==1?' '+Math.round(w*100)+' %':'')).join(', ')||'keine Mitglieder'}<br>${n} Aufgabe${n===1?'':'n'}${q.other===false?', zählt nur eigene Pool-Zeit':''}</div></div><button class="btn sm" data-a="poolEdit" data-v="${q.id}">Ändern</button></div>`});
+ return h+`</div><div style="margin-top:10px"><button class="btn pri" data-a="poolNew">Neuer Pool</button></div>`;
+}
+function viewPoolEditor(){
+ const q=poolEdit,first=plan.pools[0]&&plan.pools[0].id===q.id;
+ let h=`<h2>${q._new?'Neuer Pool':'Pool ändern'}</h2><div class="box"><label class="f" for="qName" style="margin-top:0">Name</label><input id="qName" class="inp" value="${esc(q.name)}" placeholder="z. B. Erwachsene, Kinder, Obergeschoss" autocomplete="off">`;
+ h+=`<label class="f">Wer ist dabei, mit welchem Anteil?</label>`;
+ plan.people.forEach(p=>{const w=q.w&&q.w[p.id]!=null?+q.w[p.id]:+(q.def||0);h+=`<div class="row" style="margin-bottom:6px"><span class="dot" style="background:${p.color}"></span><span class="sp">${esc(p.name)}</span><select class="inp qw" data-p="${p.id}" style="width:auto" aria-label="Anteil ${esc(p.name)}">${WEIGHTS.map(([v,l])=>`<option value="${v}" ${Math.abs(w-v)<1e-6?'selected':''}>${l}</option>`).join('')}</select></div>`});
+ if(!plan.people.length)h+=`<div class="muted small">Leg zuerst Personen an.</div>`;
+ h+=`<div class="muted small" style="margin-top:4px">100 % heißt gleich viel Zeit wie die anderen, 50 % halb so viel, 200 % doppelt so viel.</div>`;
+ h+=`<label class="cb"><input type="checkbox" id="qDef" ${q.def>0?'checked':''}> <span>Neue Personen automatisch mit 100 % aufnehmen</span></label>`;
+ h+=`<label class="cb"><input type="checkbox" id="qOther" ${q.other!==false?'checked':''}> <span>Feste Aufgaben und andere Pools mit anrechnen<br><span class="muted small">An: Wer schon viel anderes macht, bekommt hier weniger. Aus: Hier zählt nur die Zeit aus diesem Pool.</span></span></label>`;
+ h+=`<div class="row" style="margin-top:18px"><button class="btn pri" data-a="poolSave">Speichern</button><button class="btn" data-a="poolCancel">Abbrechen</button><span class="sp"></span>${q._new||first?'':'<button class="btn del" data-a="poolDel">Löschen</button>'}</div></div>`;
  return h;
 }
+function viewPeople(){
+ const today=iso(new Date());
+ let h=`<div class="box" style="margin-top:12px">`;
+ plan.people.forEach(p=>{
+  const aw=(p.away||[]).map((a,k)=>Object.assign({k},a)).filter(a=>a.t>=today);
+  const pools=plan.pools.map(q=>{const w=poolMembers(q)[p.id];return w?esc(q.name)+(w!==1?' '+Math.round(w*100)+' %':''):''}).filter(Boolean).join(', ')||'in keinem Pool';
+  h+=`<div class="ti" style="align-items:flex-start"><span class="dot" style="background:${p.color};margin-top:6px"></span><div class="sp"><b>${esc(p.name)}</b><div class="muted small">${pools}</div>
+  <label class="cb" style="margin-top:4px;font-size:13px"><input type="checkbox" data-wallet="${p.id}" ${p.wallet?'checked':''}> Geldkonto</label>
+  ${aw.length?`<div style="margin-top:6px;display:flex;gap:6px;flex-wrap:wrap">${aw.map(a=>`<span class="tag warn">abwesend ${fmtD(a.f)} – ${fmtD(a.t)} <button class="link" style="padding:0 0 0 4px;font-size:12px" data-a="awayDel" data-v="${p.id}" data-k="${a.k}" aria-label="Abwesenheit löschen">✕</button></span>`).join('')}</div>`:''}
+  ${awayFor===p.id?`<div class="small muted" style="margin-top:8px">Abwesend von – bis:</div><div class="row" style="flex-wrap:wrap"><input type="date" id="awF" class="inp" style="flex:1;min-width:130px"><input type="date" id="awT" class="inp" style="flex:1;min-width:130px"></div><div class="row" style="margin-top:6px"><button class="btn pri sm" data-a="awaySave" data-v="${p.id}">Speichern</button><button class="btn sm" data-a="awayCancel">Abbrechen</button></div>`:''}
+  </div><div style="display:flex;flex-direction:column;gap:6px"><button class="btn sm" data-a="awayAdd" data-v="${p.id}">Abwesend</button><button class="btn sm" data-a="pren" data-v="${p.id}">Umbenennen</button><button class="btn sm del" data-a="pdel" data-v="${p.id}">Entfernen</button></div></div>`});
+ if(!plan.people.length)h+=`<div class="muted small">Noch niemand angelegt.</div>`;
+ h+=`<div class="row" style="margin-top:10px"><input id="pName" class="inp" placeholder="Name der neuen Person" autocomplete="off"><button class="btn pri" data-a="padd">Hinzufügen</button></div></div>`;
+ return h+`<p class="muted small">Wer in einer Woche an mindestens 4 Tagen abwesend ist, bekommt in dieser Woche keine Aufgaben. Der Pool verteilt auf die anderen, und die Zeit wird später nicht nachgeholt.</p>`;
+}
+function viewHouse(){
+ let h=`<h2>Haushalt</h2><div class="box"><label class="f" for="hName" style="margin-top:0">Name</label><input id="hName" class="inp" value="${esc(plan.name)}">`;
+ h+=`<label class="f" for="startIn">Planstart</label><input id="startIn" type="date" class="inp" value="${esc(plan.start)}"><div class="muted small" style="margin-top:4px">Woche 1 beginnt am Montag dieser Woche.</div></div>`;
+ h+=viewAccess();
+ h+=`<h2>Version und Sicherung</h2><div class="box"><div class="small">App-Version ${APP_VERSION}, Datenstand ${plan.dataVersion||1}</div><div class="muted small" style="margin-top:6px">Alle Daten liegen in der Datenbank, nicht in der Seite. Updates der Seite ändern daran nichts. Zur Sicherheit kannst du jederzeit eine Sicherung herunterladen.</div>
+ <div class="row" style="margin-top:10px;flex-wrap:wrap"><button class="btn sm" data-a="export">Sicherung herunterladen</button><button class="btn sm" data-a="import">Sicherung einspielen</button><input type="file" id="importFile" accept="application/json,.json" style="display:none"></div></div>`;
+ h+=`<h2>Hilfe und Rechtliches</h2><div class="box"><div class="row" style="flex-wrap:wrap"><button class="btn sm" data-a="tour">Führung starten</button><button class="btn sm" data-a="legal" data-v="imp">Impressum</button><button class="btn sm" data-a="legal" data-v="ds">Datenschutz</button></div>
+ <div class="muted small" style="margin-top:12px">Dein Konto und – falls du das letzte Konto bist – alle Daten des Haushalts endgültig löschen:</div><button class="btn del sm" style="margin-top:6px" data-a="delAccount">Konto löschen</button></div>`;
+ return h;
+}
+function viewLog(){
+ let h=`<div class="box" style="margin-top:12px">`;
+ if(!logs.length)h+=`<div class="muted small">Noch keine Änderungen protokolliert.</div>`;
+ h+=logs.slice(0,60).map(l=>`<div class="log"><b>${esc(l.act)}</b>: ${esc(l.what)}${l.detail?`<div class="muted">${esc(l.detail)}</div>`:''}<div class="muted">${fmtTs(l.ts)}${l.by?', von '+esc(l.by):''}</div></div>`).join('');
+ return h+`</div>`;
+}
 function viewEditor(){
- const t=edit;
+ const t=edit,q=poolById(t.pool),mem=poolMembers(q);
  let h=`<h2>${t._new?'Neue Aufgabe':'Aufgabe ändern'}</h2><div class="box">`;
  h+=`<label class="f" for="fName" style="margin-top:0">Name</label><input id="fName" class="inp" value="${esc(t.name)}" autocomplete="off">`;
+ h+=`<label class="f" for="fMode">Art</label><select id="fMode" class="inp"><option value="fix" ${t.mode==='fix'?'selected':''}>Fest – immer dieselbe Person</option><option value="pool" ${t.mode==='pool'?'selected':''}>Pool – fair verteilt</option><option value="flex" ${t.mode==='flex'?'selected':''}>Flexibel – jederzeit buchbar</option></select>`;
+ if(t.mode==='fix')h+=`<label class="f" for="fWho">Wer macht die Aufgabe?</label><select id="fWho" class="inp"><option value="">Bitte wählen</option>${plan.people.map(p=>`<option value="${p.id}" ${t.person===p.id?'selected':''}>${esc(p.name)}</option>`).join('')}</select><div class="muted small" style="margin-top:4px">Ist die Person abwesend, übernimmt der Standard-Pool.</div>`;
+ if(t.mode==='pool'){
+  h+=`<label class="f" for="fPool">Pool</label><select id="fPool" class="inp">${plan.pools.map(x=>`<option value="${x.id}" ${t.pool===x.id?'selected':''}>${esc(x.name)}</option>`).join('')}</select>`;
+  h+=`<label class="f">Wer aus dem Pool kommt in Frage?</label><div class="muted small" style="margin-bottom:4px">Nichts angehakt heißt: alle im Pool.</div>`+Object.keys(mem).map(p=>`<label class="cb" style="margin-top:6px"><input type="checkbox" class="fwho" data-p="${p}" ${t.who.includes(p)?'checked':''}> <span><span class="dot" style="background:${pcol(p)}"></span> ${esc(pname(p))}${mem[p]!==1?' <span class="muted small">('+Math.round(mem[p]*100)+' %)</span>':''}</span></label>`).join('');
+ }
  h+=`<label class="f" for="fMin">Dauer je Mal (Minuten)</label><input id="fMin" class="inp" type="number" inputmode="numeric" min="1" value="${t.min||''}">`;
- h+=`<label class="f" for="fIv">Intervall</label><select id="fIv" class="inp">${INTERVALS.map(([k,l])=>`<option value="${k}" ${t.iv===k?'selected':''}>${l}</option>`).join('')}</select>`;
- h+=`<label class="f" for="fWage">Stundenlohn in € (optional)</label><input id="fWage" class="inp" type="number" inputmode="decimal" min="0" step="0.5" value="${+t.wage>0?t.wage:''}" placeholder="leer = kein Lohn"><div class="muted small" style="margin-top:4px">Gutgeschrieben wird nur Personen mit aktivem Geldkonto: Minuten ÷ 60 × Stundenlohn.</div><label class="f" for="fWho">Zuständig</label><select id="fWho" class="inp"><option value="">Pool – fair auf alle verteilt</option>${plan.people.map(p=>`<option value="${p.id}" ${t.person===p.id?'selected':''}>Fest: ${esc(p.name)}</option>`).join('')}</select>`;
- h+=`<label class="f">Was ist zu tun?</label><div class="steps">${t.steps.map((s,k)=>`<div class="row"><input class="inp step" data-i="${k}" value="${esc(s)}"><button class="icon" data-a="stepUp" data-v="${k}" aria-label="Nach oben" ${k?'':'disabled'}>↑</button><button class="icon" data-a="stepDel" data-v="${k}" aria-label="Schritt löschen">✕</button></div>`).join('')}</div>`;
+ if(t.mode!=='flex')h+=`<label class="f" for="fIv">Intervall</label><select id="fIv" class="inp">${INTERVALS.map(([k,l])=>`<option value="${k}" ${t.iv===k?'selected':''}>${l}</option>`).join('')}</select>`;
+ else h+=`<label class="cb"><input type="checkbox" id="fCredit" ${t.credit!==false?'checked':''}> <span>Auf die faire Verteilung anrechnen<br><span class="muted small">Wer die Aufgabe bucht, bekommt in den folgenden Wochen entsprechend weniger Pool-Aufgaben.</span></span></label>`;
+ h+=`<label class="f" for="fWage">Stundenlohn in € (optional)</label><input id="fWage" class="inp" type="number" inputmode="decimal" min="0" step="0.5" value="${+t.wage>0?t.wage:''}" placeholder="leer = kein Lohn"><div class="muted small" style="margin-top:4px">Gutgeschrieben wird nur Personen mit aktivem Geldkonto.</div>`;
+ h+=`<label class="f">Was ist zu tun?</label><div class="steps">${t.steps.map((x,k)=>`<div class="row"><input class="inp step" data-i="${k}" value="${esc(x)}"><button class="icon" data-a="stepUp" data-v="${k}" aria-label="Nach oben" ${k?'':'disabled'}>↑</button><button class="icon" data-a="stepDel" data-v="${k}" aria-label="Schritt löschen">✕</button></div>`).join('')}</div>`;
  h+=`<div class="row"><input id="fStep" class="inp" placeholder="Neuer Schritt, z. B. Spiegel putzen" autocomplete="off"><button class="btn" data-a="stepAdd">Hinzufügen</button></div>`;
  h+=`<div class="row" style="margin-top:18px"><button class="btn pri" data-a="save">Speichern</button><button class="btn" data-a="cancel">Abbrechen</button><span class="sp"></span>${t._new?'':'<button class="btn del" data-a="del">Löschen</button>'}</div></div>`;
  return h;
 }
 function readForm(){
  if(!edit||!$('#fName'))return;
- edit.name=$('#fName').value.trim();edit.min=+$('#fMin').value||0;edit.iv=$('#fIv').value;edit.person=$('#fWho').value;edit.wage=Math.max(0,+String($('#fWage').value).replace(',','.')||0);
+ edit.name=$('#fName').value.trim();edit.min=+$('#fMin').value||0;edit.mode=$('#fMode').value;
+ if($('#fIv'))edit.iv=$('#fIv').value;
+ if($('#fWho'))edit.person=$('#fWho').value;
+ if($('#fPool')){const np=$('#fPool').value;if(np!==edit.pool){edit.pool=np;edit.who=[]}else edit.who=[...document.querySelectorAll('.fwho')].filter(x=>x.checked).map(x=>x.dataset.p)}
+ if($('#fCredit'))edit.credit=$('#fCredit').checked;
+ edit.wage=Math.max(0,+String($('#fWage').value).replace(',','.')||0);
  document.querySelectorAll('.step').forEach(el=>{edit.steps[+el.dataset.i]=el.value});
 }
 function addStep(){readForm();const v=$('#fStep').value.trim();if(v){edit.steps.push(v);render();setTimeout(()=>{const f=$('#fStep');if(f)f.focus()},0)}}
@@ -516,20 +605,23 @@ document.addEventListener('click',async e=>{
  const el=e.target.closest('[data-a]');if(!el||el.disabled)return;
  const a=el.dataset.a,v=el.dataset.v;
  if(a==='reload'){location.reload();return}
+ if(a==='legal'){legal=v;render();window.scrollTo(0,0);return}
+ if(a==='legalClose'){legal=null;render();return}
+ if(a==='delAccount'){deleteAccount();return}
  if(a==='tour'){if(plan&&mode==='app'){tour=0;tourGo()}return}
  if(a==='tourNext'){tour++;tourGo();return}
  if(a==='tourBack'){tour=Math.max(0,tour-1);tourGo();return}
  if(a==='tourEnd'){tour=null;whatsNew=null;try{localStorage.setItem('hh_tour','1')}catch(e){}render();return}
  if(a==='wnClose'){whatsNew=null;tour=null;render();return}
  // Konto
- if(a==='login'){const em=$('#em').value.trim(),pw=$('#pw').value;return run(()=>auth.signInWithEmailAndPassword(em,pw))}
- if(a==='signup'){const em=$('#em').value.trim(),pw=$('#pw').value;return run(()=>auth.createUserWithEmailAndPassword(em,pw))}
+ if(a==='login'){const em=$('#em').value.trim(),pw=$('#pw').value;lf.em=em;lf.pw=pw;return run(()=>auth.signInWithEmailAndPassword(em,pw))}
+ if(a==='signup'){const em=$('#em').value.trim(),pw=$('#pw').value;lf.em=em;lf.pw=pw;lf.ok=$('#consent').checked;if(!lf.ok){authMsg='Bitte bestätige für ein neues Konto, dass du die Datenschutzerklärung gelesen hast.';render();return}return run(()=>auth.createUserWithEmailAndPassword(em,pw))}
  if(a==='reset'){const em=$('#em').value.trim();if(!em){authMsg='Gib oben deine E-Mail ein, dann tippe erneut auf „Passwort vergessen?“.';return render()}return run(async()=>{await auth.sendPasswordResetEmail(em);uiAlert('Wir haben dir eine E-Mail zum Zurücksetzen geschickt. Schau auch im Spam-Ordner nach.')})}
  if(a==='logout'){if(await uiConfirm('Möchtest du dich auf diesem Gerät abmelden?','Abmelden'))auth.signOut();return}
- if(a==='create'){const nm=$('#hn').value.trim(),imp=$('#imp').checked;return run(()=>createHousehold(nm,imp))}
+ if(a==='create'){const nm=$('#hn').value.trim(),imp=$('#imp')?$('#imp').checked:false;return run(()=>createHousehold(nm,imp))}
  if(a==='join'){const c=$('#jc').value;if(!c.trim()){authMsg='Bitte den Einladungscode eingeben.';return render()}return run(()=>joinHousehold(c))}
  if(!plan)return;
- if(a==='tab'){if(edit&&v!=='edit')edit=null;tab=v;persist();render();window.scrollTo(0,0)}
+ if(a==='tab'){if(v!=='edit'){edit=null;poolEdit=null}tab=v;persist();render();window.scrollTo(0,0)}
  else if(a==='sel'){sel=v;persist();render()}
  else if(a==='me'){me=v;persist();render()}
  else if(a==='mon'){viewMonth=new Date(viewMonth.getFullYear(),viewMonth.getMonth()+(+v),1);render()}
@@ -561,34 +653,54 @@ document.addEventListener('click',async e=>{
   b.commit().then(()=>toast('Getauscht','Bescheid geben',()=>shareMsg('✅ Getauscht: '+pname(s.from)+' macht „'+o.tname+'“ ('+occLabel(o.w)+'), '+pname(o.by)+' macht „'+s.tname+'“ ('+occLabel(s.w)+').'))).catch(fail);
  }
  // Bearbeiten
- else if(a==='new'){edit={_new:true,id:'t'+Date.now().toString(36),name:'',min:15,iv:'weekly',person:'',off:0,steps:[]};render();window.scrollTo(0,0)}
- else if(a==='edit'){const t=plan.tasks.find(x=>x.id===v);if(t){edit=JSON.parse(JSON.stringify(t));edit.steps=edit.steps||[];render();window.scrollTo(0,0)}}
+ else if(a==='new'){edit={_new:true,id:'t'+Date.now().toString(36),name:'',min:15,iv:'weekly',mode:'pool',pool:plan.pools[0].id,who:[],person:'',credit:true,wage:0,off:0,steps:[]};render();window.scrollTo(0,0)}
+ else if(a==='edit'){const t=plan.tasks.find(x=>x.id===v);if(t){edit=JSON.parse(JSON.stringify(t));edit.steps=edit.steps||[];edit.who=edit.who||[];render();window.scrollTo(0,0)}}
  else if(a==='cancel'){edit=null;render()}
  else if(a==='stepAdd')addStep();
  else if(a==='stepDel'){readForm();edit.steps.splice(+v,1);render()}
  else if(a==='stepUp'){readForm();const k=+v;[edit.steps[k-1],edit.steps[k]]=[edit.steps[k],edit.steps[k-1]];render()}
  else if(a==='save'){
   readForm();if(!edit.name){uiAlert('Bitte gib der Aufgabe einen Namen.');return}if(!(edit.min>0)){uiAlert('Bitte trag eine Dauer in Minuten ein.');return}
+  if(edit.mode==='fix'&&!person(edit.person)){uiAlert('Bitte wähle aus, wer die Aufgabe fest übernimmt.');return}
   ensureFrozen();
   const n=(IV[edit.iv]||IV.weekly).n;
-  const t={id:edit.id,name:edit.name,min:edit.min,iv:edit.iv,person:edit.person,wage:edit.wage||0,off:edit._new?Math.floor(Math.random()*n):(edit.off||0)%n,steps:edit.steps.map(s=>s.trim()).filter(Boolean)};
+  const t={id:edit.id,name:edit.name,min:edit.min,iv:edit.mode==='flex'?'weekly':edit.iv,mode:edit.mode,person:edit.mode==='fix'?edit.person:'',pool:edit.mode==='pool'?edit.pool:(edit.pool||plan.pools[0].id),who:edit.mode==='pool'?edit.who.filter(p=>poolMembers(poolById(edit.pool))[p]):[],credit:edit.credit!==false,wage:edit.wage||0,off:edit._new?Math.floor(Math.random()*n):(edit.off||0)%n,steps:edit.steps.map(x=>x.trim()).filter(Boolean)};
   const k=plan.tasks.findIndex(x=>x.id===t.id);if(k>=0){const d=taskDiff(plan.tasks[k],t);if(d)logEntry('Aufgabe geändert',t.name,d);plan.tasks[k]=t}else{plan.tasks.push(t);logEntry('Aufgabe angelegt',t.name,taskSummary(t))}
-  edit=null;savePlan();
+  edit=null;savePlan();toast('Gespeichert');
  }
  else if(a==='del'){if(await uiConfirm('Aufgabe „'+edit.name+'“ löschen? Bereits erledigte Minuten und vergangene Wochen bleiben erhalten.','Löschen',true)){ensureFrozen();logEntry('Aufgabe gelöscht',edit.name,'');plan.tasks=plan.tasks.filter(x=>x.id!==edit.id);edit=null;savePlan()}}
  else if(a==='padd'){
-  const nm=$('#pName').value.trim();if(!nm)return;ensureFrozen();
+  const nm=$('#pName')?$('#pName').value.trim():'';if(!nm)return;ensureFrozen();
   const used=plan.people.map(p=>p.color),color=COLORS.find(c=>!used.includes(c))||COLORS[plan.people.length%COLORS.length];
-  plan.people.push({id:'p'+Date.now().toString(36),name:nm,color,wallet:false});logEntry('Person hinzugefügt',nm,'');savePlan();
+  plan.people.push({id:'p'+Date.now().toString(36),name:nm,color,wallet:false,away:[]});logEntry('Person hinzugefügt',nm,'');savePlan();
  }
  else if(a==='pren'){const p=person(v);const nm=await uiPrompt('Neuer Name für '+p.name,p.name);if(nm&&nm.trim()&&nm.trim()!==p.name){logEntry('Person umbenannt',nm.trim(),'vorher '+p.name);p.name=nm.trim();savePlan()}}
  else if(a==='pdel'){
   const p=person(v),fix=plan.tasks.filter(t=>t.person===v);
   if(await uiConfirm(p.name+' entfernen?'+(fix.length?'\n'+fix.length+' feste Aufgabe(n) kommen in den Pool.':'')+'\nErledigte Minuten und vergangene Wochen bleiben erhalten.','Entfernen',true)){ensureFrozen();
-   logEntry('Person entfernt',p.name,fix.length?fix.length+' feste Aufgabe(n) in den Pool':'');fix.forEach(t=>{t.person=''});plan.people=plan.people.filter(x=>x.id!==v);if(sel===v)sel='all';if(me===v)me=null;persist();savePlan();
+   logEntry('Person entfernt',p.name,fix.length?fix.length+' feste Aufgabe(n) in den Pool':'');fix.forEach(t=>{t.person='';t.mode='pool'});plan.tasks.forEach(t=>{if(t.who)t.who=t.who.filter(x=>x!==v)});plan.pools.forEach(q=>{if(q.w)delete q.w[v]});plan.people=plan.people.filter(x=>x.id!==v);if(sel===v)sel='all';if(me===v)me=null;persist();savePlan();
   }
  }
  else if(a==='period'){period=v;render()}
+ else if(a==='etab'){editTab=v;awayFor=null;render()}
+ else if(a==='flexDo'){const t=plan.tasks.find(x=>x.id===el.dataset.t);if(t)flexDo(t)}
+ else if(a==='flexUndo'){if(await uiConfirm('Diese Buchung löschen?','Löschen',true))flexUndo(+el.dataset.w,el.dataset.k)}
+ else if(a==='awayAdd'){awayFor=v;render();setTimeout(()=>{const f=$('#awF');if(f)f.focus()},50)}
+ else if(a==='awayCancel'){awayFor=null;render()}
+ else if(a==='awaySave'){const f=$('#awF').value,t=$('#awT').value||f,p=person(v);if(!f){uiAlert('Bitte ein Startdatum wählen.');return}if(t<f){uiAlert('Das Enddatum liegt vor dem Startdatum.');return}ensureFrozen();p.away=(p.away||[]).concat([{f,t}]);logEntry('Abwesenheit eingetragen',p.name,fmtD(f)+' bis '+fmtD(t));awayFor=null;savePlan();toast('Abwesenheit gespeichert')}
+ else if(a==='awayDel'){const p=person(v),k=+el.dataset.k;if(p&&p.away[k]&&await uiConfirm('Abwesenheit '+fmtD(p.away[k].f)+' bis '+fmtD(p.away[k].t)+' löschen?','Löschen',true)){ensureFrozen();const x=p.away.splice(k,1)[0];logEntry('Abwesenheit gelöscht',p.name,fmtD(x.f)+' bis '+fmtD(x.t));savePlan()}}
+ else if(a==='poolNew'){poolEdit={_new:true,id:'q'+Date.now().toString(36),name:'',def:0,w:{},other:true};render();window.scrollTo(0,0)}
+ else if(a==='poolEdit'){const q=plan.pools.find(x=>x.id===v);if(q){poolEdit=JSON.parse(JSON.stringify(q));render();window.scrollTo(0,0)}}
+ else if(a==='poolCancel'){poolEdit=null;render()}
+ else if(a==='poolSave'){
+  const q=poolEdit;q.name=$('#qName').value.trim();if(!q.name){uiAlert('Bitte gib dem Pool einen Namen.');return}
+  q.def=$('#qDef').checked?1:0;q.other=$('#qOther').checked;q.w={};document.querySelectorAll('.qw').forEach(el=>{const w=+el.value;if(w!==q.def)q.w[el.dataset.p]=w});
+  ensureFrozen();const isNew=q._new;delete q._new;
+  const k=plan.pools.findIndex(x=>x.id===q.id);if(k>=0)plan.pools[k]=q;else plan.pools.push(q);
+  logEntry(isNew?'Pool angelegt':'Pool geändert',q.name,Object.entries(poolMembers(q)).map(([p,w])=>pname(p)+' '+Math.round(w*100)+' %').join(', '));
+  poolEdit=null;savePlan();toast('Pool gespeichert');
+ }
+ else if(a==='poolDel'){const q=poolEdit,n=plan.tasks.filter(t=>t.mode==='pool'&&t.pool===q.id).length;if(await uiConfirm('Pool „'+q.name+'“ löschen?'+(n?' '+n+' Aufgabe(n) wandern in den Pool „'+plan.pools[0].name+'“.':''),'Löschen',true)){ensureFrozen();plan.tasks.forEach(t=>{if(t.pool===q.id){t.pool=plan.pools[0].id;t.who=[]}});plan.pools=plan.pools.filter(x=>x.id!==q.id);logEntry('Pool gelöscht',q.name,'');poolEdit=null;savePlan()}}
  else if(a==='pickMe')askMe();
  else if(a==='memRemove'){const em=(plan.memberInfo||{})[v]||'dieses Konto';if(await uiConfirm(em+' aus dem Haushalt entfernen? Das Konto verliert sofort den Zugriff.','Entfernen',true)){H().update({members:FV.arrayRemove(v),['memberInfo.'+v]:FV.delete()}).then(()=>{logEntry('Mitglied entfernt',em,'');toast('Mitglied entfernt')}).catch(fail)}}
  else if(a==='leave'){const last=(plan.members||[]).length<=1;if(await uiConfirm(last?'Du bist das einzige Konto in diesem Haushalt. Nach dem Verlassen ist er für niemanden mehr erreichbar.':'Diesen Haushalt verlassen? Du kannst später mit dem Einladungscode wieder beitreten.','Verlassen',true)){const old=hid;try{await H().update({members:FV.arrayRemove(user.uid),['memberInfo.'+user.uid]:FV.delete()});await db.collection('users').doc(user.uid).set({hid:null,email:user.email||''});stopAll();plan=null;hid=null;authMsg='';mode='setup';render()}catch(err){fail(err)}}}
@@ -620,6 +732,7 @@ document.addEventListener('change',e=>{
  if(e.target.id==='pwShow'){const p=$('#pw');if(p)p.type=e.target.checked?'text':'password';return}
  if(!plan)return;
  if(['cWho','cWeeks','cDay','cDaily','cAlarm'].includes(e.target.id)){readCal();return}
+ if(edit&&(e.target.id==='fMode'||e.target.id==='fPool')){readForm();render();return}
  if(e.target.id==='startIn'&&e.target.value){ensureFrozen();logEntry('Planstart geändert',e.target.value,'vorher '+plan.start);plan.start=e.target.value;assignCache=null;curWeek=nowWeek();savePlan()}
  if(e.target.dataset&&e.target.dataset.wallet){const p=person(e.target.dataset.wallet);if(p){p.wallet=e.target.checked;logEntry('Geldkonto '+(p.wallet?'aktiviert':'deaktiviert'),p.name,'');savePlan()}}
  if(e.target.id==='importFile'&&e.target.files[0])importBackup(e.target.files[0]);
@@ -627,7 +740,7 @@ document.addEventListener('change',e=>{
 });
 /* Version und Migration */
 function migrate(){
- const upd={dataVersion:DATA_VERSION,people:plan.people.map(p=>Object.assign({wallet:false},p)),tasks:plan.tasks.map(t=>Object.assign({wage:0},t))};
+ const P=normalize(JSON.parse(JSON.stringify(plan))),upd={dataVersion:DATA_VERSION,people:P.people,tasks:P.tasks,pools:P.pools};
  if(!plan.frozen)upd.frozen={};
  if(!plan.memberInfo)upd.memberInfo={[user.uid]:user.email||''};
  H().update(JSON.parse(JSON.stringify(upd))).then(()=>logEntry('Datenstand aktualisiert','Version '+DATA_VERSION,'automatisch beim Update der Seite')).catch(e=>console.error(e));
@@ -657,13 +770,14 @@ function logEntry(act,what,detail){
  if(!hid)return;const by=me&&person(me)?person(me).name:'';
  H().collection('log').add({ts:Date.now(),d:new Date().toISOString(),by,act,what:what||'',detail:detail||''}).catch(e=>console.error(e));
 }
-function taskSummary(t){return t.min+' Min, '+(IV[t.iv]||IV.weekly).label+', '+(t.person&&person(t.person)?'fest: '+person(t.person).name:'Pool')+(+t.wage>0?', '+eur(t.wage)+'/Std':'')}
+function taskSummary(t){return t.min+' Min, '+(t.mode==='flex'?'flexibel':(IV[t.iv]||IV.weekly).label)+', '+modeLabel(t)+(+t.wage>0?', '+eur(t.wage)+'/Std':'')}
+function modeLabel(t){if(t.mode==='fix')return 'fest: '+pname(t.person);if(t.mode==='flex')return 'flexibel';const q=poolById(t.pool);return 'Pool '+q.name+(t.who&&t.who.length?' (nur '+t.who.map(pname).join(', ')+')':'')}
 function taskDiff(a,b){
  const d=[],who=t=>t.person&&person(t.person)?person(t.person).name:'Pool';
  if(a.name!==b.name)d.push('Name: '+a.name+' → '+b.name);
  if(+a.min!==+b.min)d.push('Dauer: '+a.min+' → '+b.min+' Min');
- if(a.iv!==b.iv)d.push('Intervall: '+(IV[a.iv]||IV.weekly).label+' → '+(IV[b.iv]||IV.weekly).label);
- if((a.person||'')!==(b.person||''))d.push('Zuständig: '+who(a)+' → '+who(b));
+ if(a.iv!==b.iv&&a.mode!=='flex'&&b.mode!=='flex')d.push('Intervall: '+(IV[a.iv]||IV.weekly).label+' → '+(IV[b.iv]||IV.weekly).label);
+ if(modeLabel(a)!==modeLabel(b))d.push('Zuständig: '+modeLabel(a)+' → '+modeLabel(b));
  if((+a.wage||0)!==(+b.wage||0))d.push('Stundenlohn: '+eur(a.wage)+' → '+eur(b.wage));
  if(JSON.stringify(a.steps||[])!==JSON.stringify(b.steps||[]))d.push('Schritte geändert ('+(a.steps||[]).length+' → '+(b.steps||[]).length+')');
  return d.join('; ');
@@ -722,7 +836,7 @@ function viewEditExtras(){
 }
 async function exportBackup(){
  const data={app:'haushaltsplan',appVersion:APP_VERSION,dataVersion:plan.dataVersion||1,exported:new Date().toISOString(),
-  household:{name:plan.name,start:plan.start,people:plan.people,tasks:plan.tasks,over:plan.over||{}},checks,payouts:payouts.map(({id,...x})=>x),swaps:swaps.map(({id,...x})=>x)};
+  household:{name:plan.name,start:plan.start,people:plan.people,tasks:plan.tasks,pools:plan.pools,over:plan.over||{}},checks,payouts:payouts.map(({id,...x})=>x),swaps:swaps.map(({id,...x})=>x)};
  const blob=new Blob([JSON.stringify(data,null,1)],{type:'application/json'}),a=document.createElement('a');
  a.href=URL.createObjectURL(blob);a.download='haushalt-sicherung-'+iso(new Date())+'.json';document.body.appendChild(a);a.click();
  setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},2000);
@@ -732,7 +846,7 @@ async function importBackup(file){
   const d=JSON.parse(await file.text());
   if(d.app!=='haushaltsplan'||!d.household)throw new Error('Das ist keine Sicherung dieser Seite.');
   if(!await uiConfirm('Sicherung vom '+String(d.exported).slice(0,10)+' einspielen?\n\nAufgaben, Personen und Planstart werden ersetzt. Häkchen und Auszahlungen aus der Sicherung werden ergänzt.','Einspielen',true))return;
-  const hh=d.household,upd={name:hh.name||plan.name,start:hh.start||plan.start,people:(hh.people||[]).map(p=>Object.assign({wallet:false},p)),tasks:(hh.tasks||[]).map(t=>Object.assign({wage:0},t)),over:hh.over||{},dataVersion:DATA_VERSION};
+  const hh=d.household,N=normalize({people:hh.people||[],tasks:hh.tasks||[],pools:hh.pools}),upd={name:hh.name||plan.name,start:hh.start||plan.start,people:N.people,tasks:N.tasks,pools:N.pools,over:hh.over||{},dataVersion:DATA_VERSION};
   await H().update(JSON.parse(JSON.stringify(upd)));
   const ops=[];Object.entries(d.checks||{}).forEach(([id,v])=>ops.push(b=>b.set(H().collection('checks').doc(id),v,{merge:true})));
   (d.payouts||[]).forEach(x=>ops.push(b=>b.set(H().collection('payouts').doc('imp'+(x.ts||rid())+'_'+x.p),x)));
@@ -748,11 +862,12 @@ const TOUR=[
  {tab:'swap',sel:'.box',t:'Tauschen',x:'Wähle einmal pro Gerät aus, wer du bist. Dann kannst du Aufgaben zum Tausch anbieten und auf Angebote anderer antworten. Getauscht wird erst, wenn beide zugestimmt haben.'},
  {tab:'stats',sel:'h2',t:'Auswertung',x:'Hier siehst du die geplante Arbeit pro Person, die erledigten Minuten im Monat und insgesamt sowie den Verlauf aller Monate.'},
  {tab:'stats',sel:'.seg',t:'Geldkonto und Verdienst',x:'Personen mit Geldkonto bekommen für bezahlte Aufgaben Lohn gutgeschrieben. Die Grafik zeigt den Verdienst pro Woche, Monat oder Jahr. Mit „Ausbezahlt“ setzt du ein Konto auf null.'},
- {tab:'edit',sel:'.box',t:'Aufgaben bearbeiten',x:'Lege Aufgaben an und ändere Dauer, Intervall, Stundenlohn und die Schritte. „Pool“ heißt: Die Seite verteilt die Aufgabe fair nach Minuten. Alternativ weist du sie fest einer Person zu.'},
- {tab:'edit',sel:'[data-wallet]',t:'Personen und Geldkonto',x:'Hier verwaltest du die Personen des Haushalts und schaltest für jede das Geldkonto ein oder aus.'},
- {tab:'edit',sel:'.log',t:'Logbuch, Sicherung, Zugang',x:'Das Logbuch zeigt jede Änderung an Aufgaben und Personen. Darunter findest du Sicherung, Einladungscode und Abmelden. Viel Spaß!'}
+ {tab:'edit',et:'tasks',sel:'.box',t:'Aufgaben bearbeiten',x:'Jede Aufgabe ist fest (immer dieselbe Person), im Pool (fair verteilt) oder flexibel (jederzeit buchbar). Dazu Dauer, Intervall, Stundenlohn und die einzelnen Schritte.'},
+ {tab:'edit',et:'pools',sel:'.box',t:'Pools',x:'Pools sind Personenkreise mit eigener fairer Verteilung. Pro Person stellst du den Anteil ein, z. B. Kinder 50 %.'},
+ {tab:'edit',et:'people',sel:'[data-wallet]',t:'Personen, Urlaub, Geldkonto',x:'Hier verwaltest du die Personen, trägst Abwesenheiten ein und schaltest das Geldkonto ein oder aus.'},
+ {tab:'edit',et:'log',sel:'.log',t:'Logbuch, Sicherung, Zugang',x:'Das Logbuch zeigt jede Änderung an Aufgaben und Personen. Darunter findest du Sicherung, Einladungscode und Abmelden. Viel Spaß!'}
 ];
-function tourGo(){if(tour>=TOUR.length){tour=null;try{localStorage.setItem('hh_tour','1')}catch(e){}render();return}const s=TOUR[tour];if(s&&s.tab){edit=null;tab=s.tab}render()}
+function tourGo(){if(tour>=TOUR.length){tour=null;try{localStorage.setItem('hh_tour','1')}catch(e){}render();return}const s=TOUR[tour];if(s&&s.tab){edit=null;poolEdit=null;tab=s.tab;if(s.et)editTab=s.et}render()}
 function tourHtml(){
  if(whatsNew&&tour===null)return `<div class="tour-pad"></div><div class="tour" role="dialog" aria-label="Neu in dieser Version"><h3>Neu in Version ${esc(whatsNew)}</h3><p>${CHANGELOG[whatsNew].map(esc).join('<br>')}</p><div class="row"><button class="btn" data-a="tour">Führung ansehen</button><span class="sp"></span><button class="btn pri" data-a="wnClose">Alles klar</button></div></div>`;
  if(tour===null)return '';
@@ -831,11 +946,11 @@ function exportIcs(){
 
 /* Dialoge und Hinweise */
 let dlgResolve=null,toastT=null,toastAct=null;
-function dlgShow({title='',text='',ok='OK',cancel=null,input=null,danger=false,choices=null}){
+function dlgShow({title='',text='',ok='OK',cancel=null,input=null,inputType='text',danger=false,choices=null}){
  if(dlgResolve)dlgClose(false);
  return new Promise(res=>{dlgResolve=res;const d=$('#dlg');
   const ch=choices?`<div class="choices">${choices.map(c=>`<button class="btn" data-dlg="${esc(c.v)}">${c.color?`<span class="dot" style="background:${c.color}"></span>`:''}${esc(c.l)}</button>`).join('')}</div>`:'';
-  d.innerHTML=`<div class="dlg-bg"><div class="dlg" role="dialog" aria-modal="true">${title?`<h3>${esc(title)}</h3>`:''}${text?`<p>${esc(text).replace(/\n/g,'<br>')}</p>`:''}${input!==null?`<input id="dlgIn" class="inp" style="margin-top:8px" value="${esc(input)}" autocomplete="off">`:''}${ch}<div class="row" style="justify-content:flex-end;margin-top:14px">${cancel?`<button class="btn" data-dlg="0">${esc(cancel)}</button>`:''}${choices?'':`<button class="btn ${danger?'danger':'pri'}" data-dlg="1">${esc(ok)}</button>`}</div></div></div>`;
+  d.innerHTML=`<div class="dlg-bg"><div class="dlg" role="dialog" aria-modal="true">${title?`<h3>${esc(title)}</h3>`:''}${text?`<p>${esc(text).replace(/\n/g,'<br>')}</p>`:''}${input!==null?`<input id="dlgIn" class="inp" style="margin-top:8px" type="${inputType}" value="${esc(input)}" autocomplete="${inputType==='password'?'current-password':'off'}">`:''}${ch}<div class="row" style="justify-content:flex-end;margin-top:14px">${cancel?`<button class="btn" data-dlg="0">${esc(cancel)}</button>`:''}${choices?'':`<button class="btn ${danger?'danger':'pri'}" data-dlg="1">${esc(ok)}</button>`}</div></div></div>`;
   d.style.display='block';setTimeout(()=>{const i=$('#dlgIn');if(i){i.focus();i.select()}else{const b=d.querySelector('[data-dlg="1"],.choices button');if(b)b.focus()}},60);
  });
 }
@@ -860,10 +975,10 @@ async function askMe(){
 }
 
 /* Vergangene Wochen einfrieren */
-function frozenList(w){const f=(plan.frozen||{})[w];if(!f)return null;return f.map(e=>{const live=plan.tasks.find(t=>t.id===e.i)||{};return{t:Object.assign({steps:[],wage:0},live,{id:e.i,name:e.n,min:e.m,iv:e.v}),p:e.p,fz:true}})}
+function frozenList(w){const f=(plan.frozen||{})[w];if(!f)return null;return f.map(e=>{const live=plan.tasks.find(t=>t.id===e.i)||{};return{t:Object.assign({steps:[],wage:0},live,{id:e.i,name:e.n,min:e.m,iv:e.v}),p:e.p,q:e.q||(live.mode==='fix'?'fix':live.pool||'all'),fz:true}})}
 function ensureFrozen(){
  const nw=nowWeek();if(nw<=0||!plan)return;const f=plan.frozen||{},pf={};
- for(let i=Math.max(0,nw-104);i<nw;i++){const w=wid(i);if(!f[w])pf[w]=assign(i).map(x=>({i:x.t.id,p:x.p,n:x.t.name,m:x.t.min,v:x.t.iv}))}
+ for(let i=Math.max(0,nw-104);i<nw;i++){const w=wid(i);if(!f[w])pf[w]=assign(i).map(x=>({i:x.t.id,p:x.p,n:x.t.name,m:x.t.min,v:x.t.iv,q:x.q||'fix'}))}
  const keys=Object.keys(pf);if(!keys.length)return;
  plan.frozen=Object.assign({},f,pf);assignCache=null;
  const FP=firebase.firestore.FieldPath,args=[];keys.forEach(w=>args.push(new FP('frozen',w),pf[w]));
@@ -905,6 +1020,92 @@ function viewAccess(){
  h+=`<h2>Konten im Haushalt</h2><div class="box">`+mem.map(uid=>`<div class="ti"><span class="sp small">${esc(mi[uid]||'Konto ohne bekannte E-Mail')}${uid===user.uid?' <span class="muted">(dieses Gerät)</span>':''}</span>${uid===user.uid?'':`<button class="btn sm del" data-a="memRemove" data-v="${esc(uid)}">Entfernen</button>`}</div>`).join('')+`</div>`;
  h+=`<div class="row" style="margin-top:12px;flex-wrap:wrap"><button class="btn del" data-a="logout">Abmelden</button><button class="btn del" data-a="leave">Haushalt verlassen</button></div>`;
  return h;
+}
+
+/* Flexible Aufgaben */
+function viewFlex(i){
+ const fl=plan.tasks.filter(t=>t.mode==='flex');if(!fl.length)return '';
+ const nw=nowWeek(),can=i>=0&&i<=nw,recs=Object.entries(checks[wid(i)]||{}).filter(([k,v])=>v&&v.q==='flex'&&(sel==='all'||v.p===sel));
+ let h=`<div class="box"><div class="ph"><h3>Zusatzaufgaben</h3><span class="sp"></span><span class="muted small">jederzeit buchbar</span></div>`;
+ fl.forEach(t=>{h+=`<div class="task"><div class="row"><span class="sp">${esc(t.name)}</span><span class="muted small">${t.min} Min${+t.wage>0?', '+eur(t.min/60*t.wage):''}</span>${can?`<button class="btn sm pri" data-a="flexDo" data-t="${t.id}">Erledigt</button>`:''}</div>${t.steps&&t.steps.length?`<details style="margin-left:0"><summary>Was ist zu tun?</summary><ul>${t.steps.map(x=>`<li>${esc(x)}</li>`).join('')}</ul></details>`:''}</div>`});
+ if(!can)h+=`<div class="muted small" style="margin-top:6px">Buchen geht nur in der aktuellen oder einer vergangenen Woche.</div>`;
+ if(recs.length)h+=`<div class="muted small" style="margin-top:10px">Diese Woche gebucht:</div>`+recs.map(([k,v])=>`<div class="ti"><span class="dot" style="background:${pcol(v.p)}"></span><span class="sp small">${esc(v.n)}, ${esc(pname(v.p))}<span class="muted"> · ${fmtD(v.t)}</span></span><span class="muted small">${v.m} Min</span><button class="icon" data-a="flexUndo" data-w="${i}" data-k="${esc(k)}" aria-label="Buchung löschen">✕</button></div>`).join('');
+ return h+`</div>`;
+}
+async function flexDo(t){
+ const nw=nowWeek(),i=Math.min(curWeek,nw);if(i<0){uiAlert('Der Plan hat noch nicht begonnen.');return}
+ const list=me&&person(me)?[person(me)].concat(plan.people.filter(x=>x.id!==me)):plan.people;
+ const p=await dlgShow({title:t.name+' erledigt',text:'Wer hat die Aufgabe erledigt?',choices:list.map(x=>({v:x.id,l:x.name,color:x.color})),cancel:'Abbrechen'});
+ if(!p||!person(p))return;
+ const pp=person(p),id=wid(i),k='x_'+t.id+'_'+Date.now().toString(36),mon=weekMon(i),d=i===nw?new Date():new Date(mon.getFullYear(),mon.getMonth(),mon.getDate()+6);
+ const val={p,pn:pp.name,m:t.min,n:t.name,t:iso(d),q:'flex',ti:t.id,f:t.credit===false?0:1};if(pp.wallet&&+t.wage>0)val.e=r2(t.min/60*t.wage);
+ checks[id]=checks[id]||{};checks[id][k]=val;assignCache=null;render();
+ toast(t.name+' gebucht für '+pp.name+(val.e?', +'+eur(val.e):''),'Rückgängig',()=>flexUndo(i,k));
+ H().collection('checks').doc(id).set({[k]:val},{merge:true}).catch(fail);
+}
+function flexUndo(i,k){const id=wid(i);if(checks[id])delete checks[id][k];assignCache=null;render();H().collection('checks').doc(id).set({[k]:FV.delete()},{merge:true}).catch(fail)}
+
+/* Auswertung nach Art */
+function qName(q){if(q==='fix')return 'Fest';if(q==='flex')return 'Flexibel';const p=plan.pools.find(x=>x.id===q);return p?'Pool '+p.name:'Pool'}
+function recTask(v){return plan.tasks.find(t=>t.id===v.ti)||plan.tasks.find(t=>t.name===v.n)}
+function recQ(v){if(v.q)return v.q;const t=recTask(v);if(!t)return 'fix';return t.mode==='fix'?'fix':t.mode==='flex'?'flex':t.pool}
+function viewTypes(){
+ const from=Math.max(0,nowWeek()),N=52,P={},D={},T={},qs=new Set();
+ for(let i=from;i<from+N;i++)assign(i).forEach(x=>{const m=weekMin(x.t)/N,q=x.q||'fix';P[x.p]=P[x.p]||{};P[x.p][q]=(P[x.p][q]||0)+m;qs.add(q);const k=x.t.id;T[k]=T[k]||{n:x.t.name,q,plan:0,done:0};T[k].plan+=m});
+ Object.values(checks).forEach(doc=>Object.values(doc||{}).forEach(v=>{if(!v||typeof v!=='object'||!v.p)return;const q=recQ(v),m=+v.m||0,t=recTask(v),k=t?t.id:'n:'+v.n;D[v.p]=D[v.p]||{};D[v.p][q]=(D[v.p][q]||0)+m;qs.add(q);T[k]=T[k]||{n:t?t.name:v.n,q,plan:0,done:0};T[k].done+=m}));
+ plan.tasks.filter(t=>t.mode==='flex').forEach(t=>{T[t.id]=T[t.id]||{n:t.name,q:'flex',plan:0,done:0}});
+ const order=['fix',...plan.pools.map(p=>p.id),'flex'].filter(q=>qs.has(q));qs.forEach(q=>{if(!order.includes(q))order.push(q)});
+ const ids=plan.people.map(p=>p.id);Object.keys(D).forEach(id=>{if(!ids.includes(id))ids.push(id)});
+ const tbl=M=>`<div class="tw"><table class="hist"><tr><th>Person</th>${order.map(q=>`<th>${esc(qName(q))}</th>`).join('')}<th>Gesamt</th></tr>`+ids.map(id=>{const r=M[id]||{},s=order.reduce((a,q)=>a+(r[q]||0),0);return `<tr><td>${esc(pname(id))}</td>${order.map(q=>`<td>${r[q]?fmtMin(r[q]):'–'}</td>`).join('')}<td><b>${s?fmtMin(s):'–'}</b></td></tr>`}).join('')+`</table></div>`;
+ let h=`<h2>Zeit nach Art</h2><div class="box"><div class="small"><b>Geplant</b> <span class="muted">pro Woche, Durchschnitt der nächsten 52 Wochen</span></div>${tbl(P)}<div class="small" style="margin-top:14px"><b>Erledigt</b> <span class="muted">insgesamt</span></div>${tbl(D)}</div>`;
+ const rows=Object.values(T).sort((a,b)=>(order.indexOf(a.q)-order.indexOf(b.q))||(b.plan-a.plan)||(b.done-a.done));
+ h+=`<h2>Zeit je Aufgabe</h2><div class="box"><div class="tw"><table class="hist"><tr><th>Aufgabe</th><th>Art</th><th>Geplant/Woche</th><th>Erledigt</th></tr>`+rows.map(r=>`<tr><td>${esc(r.n)}</td><td>${esc(qName(r.q))}</td><td>${r.plan?fmtMin(r.plan):'–'}</td><td>${r.done?fmtMin(r.done):'–'}</td></tr>`).join('')+`</table></div></div>`;
+ return h;
+}
+
+/* Rechtliches */
+function legalLinks(){return `<p class="muted small" style="text-align:center;margin-top:20px"><button class="link" data-a="legal" data-v="imp">Impressum</button> · <button class="link" data-a="legal" data-v="ds">Datenschutz</button></p>`}
+function viewLegal(){
+ const O=OPERATOR,addr=`${esc(O.name)}<br>${esc(O.street)}<br>${esc(O.city)}<br>E-Mail: ${esc(O.email)}`;
+ let h=`<div class="row" style="margin:6px 0"><button class="btn sm" data-a="legalClose">‹ Zurück</button></div><div class="box small" style="line-height:1.6">`;
+ if(legal==='imp')h+=`<h2 style="margin-top:0">Impressum</h2><p>Angaben gemäß § 5 Digitale-Dienste-Gesetz (DDG):</p><p>${addr}</p><p><b>Verantwortlich für den Inhalt</b><br>${esc(O.name)}, Anschrift wie oben.</p><p>Dies ist ein privates, nicht kommerzielles Angebot. Für Inhalte, die Nutzer in ihren Haushalten anlegen, sind diese selbst verantwortlich.</p>`;
+ else h+=`<h2 style="margin-top:0">Datenschutzerklärung</h2>
+ <p><b>1. Verantwortlicher</b><br>${addr}</p>
+ <p><b>2. Welche Daten verarbeitet werden</b><br>Für dein Konto: E-Mail-Adresse und Passwort (das Passwort wird nur verschlüsselt bei Google Firebase gespeichert). Für deinen Haushalt: Name des Haushalts, Namen der Personen, Aufgaben, Erledigungen, Abwesenheiten, Tausche, Geldkonto-Beträge, Auszahlungen und das Logbuch. Diese Daten gibst du selbst ein. Technisch fallen beim Aufruf die IP-Adresse und Browserdaten an.</p>
+ <p><b>3. Zweck und Rechtsgrundlage</b><br>Die Daten werden ausschließlich verarbeitet, um die Funktionen der Seite bereitzustellen (Art. 6 Abs. 1 lit. b DSGVO). Technische Zugriffsdaten werden zum sicheren Betrieb verarbeitet (Art. 6 Abs. 1 lit. f DSGVO).</p>
+ <p><b>4. Dienstleister</b><br>Hosting der Seite: GitHub Pages (GitHub Inc., USA). Anmeldung und Datenbank: Google Firebase Authentication und Cloud Firestore (Google Ireland Ltd. / Google LLC). Dabei können Daten in die USA übermittelt werden. Beide Anbieter sind nach dem EU-US Data Privacy Framework zertifiziert. Es gibt keine Werbung, kein Tracking und keine Weitergabe an Dritte.</p>
+ <p><b>5. Speicherung im Browser</b><br>Die Seite speichert Einstellungen wie die gewählte Person oder den zuletzt geöffneten Reiter im lokalen Speicher deines Browsers. Firebase hält deine Anmeldung im Browser fest. Tracking-Cookies werden nicht verwendet.</p>
+ <p><b>6. Speicherdauer und Löschung</b><br>Die Daten bleiben gespeichert, bis du sie löschst. Unter Bearbeiten → Haushalt → „Konto löschen“ entfernst du dein Konto. Bist du das letzte Konto eines Haushalts, werden dabei alle Daten des Haushalts gelöscht.</p>
+ <p><b>7. Deine Rechte</b><br>Du hast das Recht auf Auskunft, Berichtigung, Löschung, Einschränkung der Verarbeitung, Datenübertragbarkeit (z. B. über „Sicherung herunterladen“) und Widerspruch. Wende dich dafür an die oben genannte E-Mail-Adresse. Außerdem kannst du dich bei einer Datenschutz-Aufsichtsbehörde beschweren, z. B. beim Landesbeauftragten für den Datenschutz und die Informationsfreiheit Baden-Württemberg.</p>
+ <p class="muted">Stand: ${esc(O.updated)}</p>`;
+ return h+`</div>`;
+}
+
+/* Konto löschen */
+async function deleteAccount(){
+ if(!user)return;
+ const last=!!(plan&&(plan.members||[]).length<=1);
+ const pw=await dlgShow({title:'Konto endgültig löschen',text:'Dein Konto ('+user.email+') wird gelöscht.'+(plan?(last?' Du bist das letzte Konto in diesem Haushalt. Deshalb werden auch alle Haushaltsdaten gelöscht: Aufgaben, Häkchen, Tausche, Geldkonten und Logbuch.':' Der Haushalt bleibt für die anderen erhalten.'):'')+'\n\nZur Bestätigung bitte dein Passwort eingeben.',input:'',inputType:'password',ok:'Endgültig löschen',cancel:'Abbrechen',danger:true});
+ if(!pw)return;
+ try{
+  await user.reauthenticateWithCredential(firebase.auth.EmailAuthProvider.credential(user.email,pw));
+  stopAll();
+  if(hid){
+   const ref=H();
+   if(last){
+    for(const c of ['checks','swaps','payouts','log']){const docs=(await ref.collection(c).get()).docs;for(let i=0;i<docs.length;i+=400){const b=db.batch();docs.slice(i,i+400).forEach(d=>b.delete(d.ref));await b.commit()}}
+    if(plan&&plan.code)await db.collection('codes').doc(plan.code).delete().catch(()=>{});
+    await ref.delete();
+   }else await ref.update({members:FV.arrayRemove(user.uid),['memberInfo.'+user.uid]:FV.delete()});
+  }
+  await db.collection('users').doc(user.uid).delete();
+  await user.delete();
+  uiAlert('Dein Konto wurde gelöscht.');
+ }catch(e){
+  console.error(e);
+  if(e&&(e.code==='auth/wrong-password'||e.code==='auth/invalid-credential'))uiAlert('Das Passwort stimmt nicht. Es wurde nichts gelöscht.');
+  else{uiAlert('Löschen fehlgeschlagen: '+(e&&e.message||e)+'\nBitte lade die Seite neu und versuche es erneut.','Fehler')}
+ }
 }
 
 render();
