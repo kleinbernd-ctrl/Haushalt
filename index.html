@@ -102,6 +102,7 @@ details ul{margin:6px 0 0;padding-left:20px;font-size:14px}
 table.hist{border-collapse:collapse;width:100%;font-size:14px;font-variant-numeric:tabular-nums}
 table.hist th,table.hist td{padding:7px 8px;border-bottom:1px solid var(--line);text-align:right;white-space:nowrap}
 table.hist th:first-child,table.hist td:first-child{text-align:left}
+table.dn td:first-child{white-space:normal}table.dl th:nth-child(2),table.dl td:nth-child(2){text-align:left;white-space:normal}
 .ti{display:flex;align-items:center;gap:10px;border-top:1px solid var(--line);padding:10px 0}
 .ti:first-child{border-top:0}
 label.f{display:block;font-size:13px;color:var(--mute);margin:12px 0 4px}
@@ -310,9 +311,9 @@ const COLORS=['#2b5d8a','#c0563f','#2e8a5a','#8456b0','#c28a1e','#21918f','#b548
 const WD=['Mo','Di','Mi','Do','Fr','Sa','So'];
 const MONTHS=['Januar','Februar','März','April','Mai','Juni','Juli','August','September','Oktober','November','Dezember'];
 const DAY=864e5;
-const APP_VERSION='18.2';
+const APP_VERSION='18.3';
 const DATA_VERSION=5;
-const CHANGELOG={'18.2':['Ein Tipp auf eine Aufgabe im Plan zeigt, was zu tun ist – mit Schritten und Fotos. Über „Bearbeiten“ geht es in den Editor'],'18.1':['Aufgaben lassen sich direkt aus dem Plan und aus der Bilanz öffnen: auf den Namen tippen. Danach geht es zurück an dieselbe Stelle'],'18.0':['Aufgaben zeigen, wer sie angelegt und zuletzt geändert hat','Startdatum: Aufgaben können ab einem bestimmten Tag starten','Mehrere Aufgaben auf einmal ändern','Reihenfolge: Eine Aufgabe kann nach einer anderen kommen, z. B. Wischen nach Abstauben – auf Wunsch von derselben Person','Fotos bei Aufgaben als Anleitung'],'17.4':['Bilanz „Geplante Arbeit“: wählbar diese Woche, nächste Woche, 4 Wochen, bis der Zyklus komplett ist oder 52 Wochen – je Person mit allen Aufgaben und Zeiten'],'17.3':['Kalender aufgeräumt: die Punkte pro Person neben der Kalenderwoche sind entfernt, der Fortschrittsring bleibt'],'17.2':['Stundenlohn pro Person statt pro Aufgabe: unter Einstellungen → Personen. Bei der Aufgabe wird nur noch festgelegt, ob sie bezahlt wird','Plan-Updates: Zahl am Reiter „Plan“, Hinweis bei Änderungen während die App offen ist, Schild „geändert“ auch bei eigenen Änderungen (3 Tage)','Im Verlauf steht, ab wann eine Änderung gilt','Aufgaben, die durch eine Änderung wegfallen, erscheinen nicht mehr als „offen aus Vorwochen“'],'17.1':['Beim Abhaken mit Timer steht, wo man einstellt, ob die gemessene oder die geplante Zeit gutgeschrieben wird'],'17.0':['Timer-Gutschrift: Auf Wunsch zählt die gemessene oder von Hand eingetragene Zeit für Bilanz und Lohn – einstellbar unter Einstellungen → Funktionen, optional mit Obergrenze','Hinweis auf Änderungen: Im Plan steht, was sich seit deinem letzten Besuch an Aufgaben, Personen und Einstellungen geändert hat','Geänderte Aufgaben tragen das Schild „geändert“'],'16.4':['Fehler behoben: Werden die Wochentage einer Aufgabe geändert, die diese Woche schon teilweise abgehakt ist, gilt die Änderung erst ab nächster Woche','Fehler behoben: Abhaken konnte in seltenen Fällen beim Speichern scheitern','Nach dem Timer wird nur noch bei spürbarer Abweichung gefragt, ob die Dauer übernommen werden soll','Beim Stoppen des Timers steht „ich“ in der Auswahl oben'],'16.3':['Jeder kann für jeden abhaken: beim Abhaken auswählen, wer die Aufgabe erledigt hat – mit doppelter Bestätigung','Im Plan steht, wer eingetragen hat, wenn es nicht die ausführende Person war'],'16.2':['„Ab wann soll das gelten?“ kommt beim Ein- und Ausschalten von Funktionen nur noch, wenn sich dadurch die Verteilung ändert (Abwesenheit)'],'16.1':['Beim Stoppen des Timers: gemessene Zeit übernehmen, Zeit manuell eingeben oder Zeiterfassung abbrechen'],'16.0':['Wochentage pro Aufgabe: z. B. täglich nur Mo–Fr oder wöchentlich mehrmals (Mi + Sa)','Timer: Start und Stopp bei jeder Aufgabe, die gemessene Zeit lässt sich beim Abhaken korrigieren','Bilanz „Gemessene Zeiten“: geplant gegen gemessen, mit Übernahme als neue Dauer nach Bestätigung'],'15.0':['Neuer Reiter „Aufgaben“ statt „Markt“: alle Aufgaben, Tauschen und Ausschreiben an einem Ort','Ausschreiben vereinfacht: Wer zuerst mit doppelter Bestätigung übernimmt, bekommt die Aufgabe'],'14.0':['Einfacher: Bei jeder Aufgabe legst du fest, wer mitmacht und wie ausgeglichen wird. Gruppen entfallen','Anteil (z. B. Kinder 50 %) jetzt direkt bei der Person','Neu: Chat für den Haushalt','Neu: Einkaufsliste mit doppelter Bestätigung beim Abhaken'],'13.0':['Beim Ändern von Aufgaben, Gruppen, Personen und Funktionen wählst du, ab wann die Änderung gilt: sofort, nächste Woche, nächster Monat oder ab einem Tag'],'12.2':['Bereits abgehakte Aufgaben bleiben bei ihrer Person, auch wenn Einstellungen geändert werden'],'12.1':['Hinweisleiste verschwindet wieder vollständig'],'12.0':['Neues Design: hell, freundlich, mit Navigation am unteren Rand','Fortschrittsringe im Kalender zeigen, wie viel jeder Woche erledigt ist'],'11.0':['Persönlicher Zugang: Jedes Konto gehört fest zu einer Person','Man kann nur noch für sich selbst abhaken, tauschen und buchen – und für Personen ohne eigenes Konto','Der Admin ist an sein Konto gebunden, die PIN entfällt dann'],'10.0':['Funktionen ein- und ausschalten unter Einstellungen → Funktionen','Voreinstellungen „Einfach“, „Familie“ und „Alles“','Führung zeigt nur eingeschaltete Funktionen'],'9.1':['Abhaken und Buchen werden doppelt bestätigt und sind danach endgültig','Korrekturen nur noch durch den entsperrten Admin'],'9.0':['Neuer Reiter „Markt“: Tauschen und Ausschreibungen an einem Ort','Ausschreibungen: Aufgabe anbieten, annehmen oder Gegenvorschlag machen; vereinbarte Aufgaben kommen automatisch in den Plan','Neue Aufgabenart „einmalig“ mit Datum','Lohn kann vom Haushalt oder von einer Person bezahlt werden','Pro Aufgabe wählbar, ob sie für die faire Verteilung zählt'],'8.4':['Zeit oder Lohn schenken: Wer eine Aufgabe für jemand anderen erledigt, kann sich die Zeit, den Lohn oder beides nicht gutschreiben lassen'],'8.3':['Aufgaben anderer übernehmen: beim Abhaken auswählen, wer es erledigt hat','Tauschen ohne Gegenleistung: Aufgaben einfach übernehmen'],'8.2':['Die App heißt jetzt Fairloop'],'8.1':['Anonyme Nutzungsstatistik (abschaltbar unter Haushalt & Konto)','Entwicklerbereich für den Betreiber'],'8.0':['Optionale Admin-Freigabe: Änderungen an Aufgaben, Personen und Gruppen bestätigt der Admin per PIN','Feedback-Funktion für die Beta-Phase (unten auf jeder Seite)'],'7.0':['Neue, selbsterklärende Namen: Plan, Tauschen, Bilanz, Einstellungen, Gruppen','Tauschpakete: mehrere Aufgaben anbieten und mehrere gegenbieten, die Anzahl muss nicht gleich sein'],'6.2':['Impressum vervollständigt'],'6.1':['Führung und Hilfetexte an die neuen Funktionen angepasst'],'6.0':['Mehrere Gruppen mit eigenem Personenkreis','Anteil pro Person im Pool, z. B. Kinder 50 %','Teilnehmer pro Aufgabe festlegen','Abwesenheit/Urlaub: der Pool verteilt automatisch um','Flexible Zusatzaufgaben, jederzeit buchbar','Auswertung nach festen, Pool- und flexiblen Aufgaben','Bearbeiten in Unterbereiche gegliedert','Impressum, Datenschutz und „Konto löschen“'],'5.0':['Beim Start „Wer bist du?“: Die Seite zeigt zuerst deine Aufgaben','„Noch offen aus Vorwochen“ in der aktuellen Woche','Eigene Dialoge und „Rückgängig“ nach dem Abhaken','Vergangene Wochen bleiben fest, auch wenn der Plan geändert wird','Tauschangebote per WhatsApp, Signal & Co. teilen','Mitglieder verwalten, Einladungscode erneuern, Haushalt verlassen','Als App auf dem Home-Bildschirm installierbar'],'4.2':['Kalender-Export funktioniert jetzt auch auf Android','Erklärungen zum Kalender-Export und zur Anmeldung'],'4.1':['Kalender-Export: Aufgaben als Termine in den iPhone- oder Google-Kalender übernehmen','Hinweis zum Einladungscode auf der Anmeldeseite'],'4.0':['Geldkonto pro Person mit Stundenlohn je Aufgabe','Verdienst-Grafik nach Woche, Monat oder Jahr','Logbuch für Änderungen an Aufgaben und Personen','Führung durch die Funktionen (Fragezeichen oben)','Sicherung herunterladen und einspielen']};
+const CHANGELOG={'18.3':['Bilanz neu: „Erledigte Arbeit“ je Person für diese oder letzte Woche, Monat, Jahr oder einen frei gewählten Zeitraum – mit Zeit und Lohn je Aufgabe, Summe und auf Wunsch jeder einzelnen Erledigung','Monatsverlauf, „Erledigt im Monat/insgesamt“ und „Zeit nach Art/je Aufgabe“ entfallen dafür','Gemessene Zeiten: „Dauer anpassen“ übernimmt eine gemessene Zeit direkt oder eine selbst eingetragene','„Noch offen aus Vorwochen“ steht jetzt in der jeweiligen vergangenen Woche statt in der aktuellen','Nachbuchen: Aufgaben lassen sich in jeder vergangenen Woche nachträglich abhaken. Zeit und Lohn zählen im Monat der Buchung'],'18.2':['Ein Tipp auf eine Aufgabe im Plan zeigt, was zu tun ist – mit Schritten und Fotos. Über „Bearbeiten“ geht es in den Editor'],'18.1':['Aufgaben lassen sich direkt aus dem Plan und aus der Bilanz öffnen: auf den Namen tippen. Danach geht es zurück an dieselbe Stelle'],'18.0':['Aufgaben zeigen, wer sie angelegt und zuletzt geändert hat','Startdatum: Aufgaben können ab einem bestimmten Tag starten','Mehrere Aufgaben auf einmal ändern','Reihenfolge: Eine Aufgabe kann nach einer anderen kommen, z. B. Wischen nach Abstauben – auf Wunsch von derselben Person','Fotos bei Aufgaben als Anleitung'],'17.4':['Bilanz „Geplante Arbeit“: wählbar diese Woche, nächste Woche, 4 Wochen, bis der Zyklus komplett ist oder 52 Wochen – je Person mit allen Aufgaben und Zeiten'],'17.3':['Kalender aufgeräumt: die Punkte pro Person neben der Kalenderwoche sind entfernt, der Fortschrittsring bleibt'],'17.2':['Stundenlohn pro Person statt pro Aufgabe: unter Einstellungen → Personen. Bei der Aufgabe wird nur noch festgelegt, ob sie bezahlt wird','Plan-Updates: Zahl am Reiter „Plan“, Hinweis bei Änderungen während die App offen ist, Schild „geändert“ auch bei eigenen Änderungen (3 Tage)','Im Verlauf steht, ab wann eine Änderung gilt','Aufgaben, die durch eine Änderung wegfallen, erscheinen nicht mehr als „offen aus Vorwochen“'],'17.1':['Beim Abhaken mit Timer steht, wo man einstellt, ob die gemessene oder die geplante Zeit gutgeschrieben wird'],'17.0':['Timer-Gutschrift: Auf Wunsch zählt die gemessene oder von Hand eingetragene Zeit für Bilanz und Lohn – einstellbar unter Einstellungen → Funktionen, optional mit Obergrenze','Hinweis auf Änderungen: Im Plan steht, was sich seit deinem letzten Besuch an Aufgaben, Personen und Einstellungen geändert hat','Geänderte Aufgaben tragen das Schild „geändert“'],'16.4':['Fehler behoben: Werden die Wochentage einer Aufgabe geändert, die diese Woche schon teilweise abgehakt ist, gilt die Änderung erst ab nächster Woche','Fehler behoben: Abhaken konnte in seltenen Fällen beim Speichern scheitern','Nach dem Timer wird nur noch bei spürbarer Abweichung gefragt, ob die Dauer übernommen werden soll','Beim Stoppen des Timers steht „ich“ in der Auswahl oben'],'16.3':['Jeder kann für jeden abhaken: beim Abhaken auswählen, wer die Aufgabe erledigt hat – mit doppelter Bestätigung','Im Plan steht, wer eingetragen hat, wenn es nicht die ausführende Person war'],'16.2':['„Ab wann soll das gelten?“ kommt beim Ein- und Ausschalten von Funktionen nur noch, wenn sich dadurch die Verteilung ändert (Abwesenheit)'],'16.1':['Beim Stoppen des Timers: gemessene Zeit übernehmen, Zeit manuell eingeben oder Zeiterfassung abbrechen'],'16.0':['Wochentage pro Aufgabe: z. B. täglich nur Mo–Fr oder wöchentlich mehrmals (Mi + Sa)','Timer: Start und Stopp bei jeder Aufgabe, die gemessene Zeit lässt sich beim Abhaken korrigieren','Bilanz „Gemessene Zeiten“: geplant gegen gemessen, mit Übernahme als neue Dauer nach Bestätigung'],'15.0':['Neuer Reiter „Aufgaben“ statt „Markt“: alle Aufgaben, Tauschen und Ausschreiben an einem Ort','Ausschreiben vereinfacht: Wer zuerst mit doppelter Bestätigung übernimmt, bekommt die Aufgabe'],'14.0':['Einfacher: Bei jeder Aufgabe legst du fest, wer mitmacht und wie ausgeglichen wird. Gruppen entfallen','Anteil (z. B. Kinder 50 %) jetzt direkt bei der Person','Neu: Chat für den Haushalt','Neu: Einkaufsliste mit doppelter Bestätigung beim Abhaken'],'13.0':['Beim Ändern von Aufgaben, Gruppen, Personen und Funktionen wählst du, ab wann die Änderung gilt: sofort, nächste Woche, nächster Monat oder ab einem Tag'],'12.2':['Bereits abgehakte Aufgaben bleiben bei ihrer Person, auch wenn Einstellungen geändert werden'],'12.1':['Hinweisleiste verschwindet wieder vollständig'],'12.0':['Neues Design: hell, freundlich, mit Navigation am unteren Rand','Fortschrittsringe im Kalender zeigen, wie viel jeder Woche erledigt ist'],'11.0':['Persönlicher Zugang: Jedes Konto gehört fest zu einer Person','Man kann nur noch für sich selbst abhaken, tauschen und buchen – und für Personen ohne eigenes Konto','Der Admin ist an sein Konto gebunden, die PIN entfällt dann'],'10.0':['Funktionen ein- und ausschalten unter Einstellungen → Funktionen','Voreinstellungen „Einfach“, „Familie“ und „Alles“','Führung zeigt nur eingeschaltete Funktionen'],'9.1':['Abhaken und Buchen werden doppelt bestätigt und sind danach endgültig','Korrekturen nur noch durch den entsperrten Admin'],'9.0':['Neuer Reiter „Markt“: Tauschen und Ausschreibungen an einem Ort','Ausschreibungen: Aufgabe anbieten, annehmen oder Gegenvorschlag machen; vereinbarte Aufgaben kommen automatisch in den Plan','Neue Aufgabenart „einmalig“ mit Datum','Lohn kann vom Haushalt oder von einer Person bezahlt werden','Pro Aufgabe wählbar, ob sie für die faire Verteilung zählt'],'8.4':['Zeit oder Lohn schenken: Wer eine Aufgabe für jemand anderen erledigt, kann sich die Zeit, den Lohn oder beides nicht gutschreiben lassen'],'8.3':['Aufgaben anderer übernehmen: beim Abhaken auswählen, wer es erledigt hat','Tauschen ohne Gegenleistung: Aufgaben einfach übernehmen'],'8.2':['Die App heißt jetzt Fairloop'],'8.1':['Anonyme Nutzungsstatistik (abschaltbar unter Haushalt & Konto)','Entwicklerbereich für den Betreiber'],'8.0':['Optionale Admin-Freigabe: Änderungen an Aufgaben, Personen und Gruppen bestätigt der Admin per PIN','Feedback-Funktion für die Beta-Phase (unten auf jeder Seite)'],'7.0':['Neue, selbsterklärende Namen: Plan, Tauschen, Bilanz, Einstellungen, Gruppen','Tauschpakete: mehrere Aufgaben anbieten und mehrere gegenbieten, die Anzahl muss nicht gleich sein'],'6.2':['Impressum vervollständigt'],'6.1':['Führung und Hilfetexte an die neuen Funktionen angepasst'],'6.0':['Mehrere Gruppen mit eigenem Personenkreis','Anteil pro Person im Pool, z. B. Kinder 50 %','Teilnehmer pro Aufgabe festlegen','Abwesenheit/Urlaub: der Pool verteilt automatisch um','Flexible Zusatzaufgaben, jederzeit buchbar','Auswertung nach festen, Pool- und flexiblen Aufgaben','Bearbeiten in Unterbereiche gegliedert','Impressum, Datenschutz und „Konto löschen“'],'5.0':['Beim Start „Wer bist du?“: Die Seite zeigt zuerst deine Aufgaben','„Noch offen aus Vorwochen“ in der aktuellen Woche','Eigene Dialoge und „Rückgängig“ nach dem Abhaken','Vergangene Wochen bleiben fest, auch wenn der Plan geändert wird','Tauschangebote per WhatsApp, Signal & Co. teilen','Mitglieder verwalten, Einladungscode erneuern, Haushalt verlassen','Als App auf dem Home-Bildschirm installierbar'],'4.2':['Kalender-Export funktioniert jetzt auch auf Android','Erklärungen zum Kalender-Export und zur Anmeldung'],'4.1':['Kalender-Export: Aufgaben als Termine in den iPhone- oder Google-Kalender übernehmen','Hinweis zum Einladungscode auf der Anmeldeseite'],'4.0':['Geldkonto pro Person mit Stundenlohn je Aufgabe','Verdienst-Grafik nach Woche, Monat oder Jahr','Logbuch für Änderungen an Aufgaben und Personen','Führung durch die Funktionen (Fragezeichen oben)','Sicherung herunterladen und einspielen']};
 const eur=v=>(Math.round((+v||0)*100)/100).toLocaleString('de-DE',{style:'currency',currency:'EUR'});
 const r2=v=>Math.round(v*100)/100;
 const GIFT_LABEL={time:'Zeit geschenkt',money:'Lohn geschenkt',both:'Zeit und Lohn geschenkt'};
@@ -328,7 +329,7 @@ const FEATURES=[
  ['money','Geldkonto und Lohn','Stundenlohn für Aufgaben, Kontostände und Auszahlungen.'],
  ['admin','Admin-Freigabe','Ein Admin bestätigt Änderungen per PIN.'],
  ['cal','Kalender-Export','Termine in den Handykalender übernehmen.'],
- ['stats','Ausführliche Bilanz','Monatsverlauf, Zeit nach Art und je Aufgabe.'],
+ ['stats','Ausführliche Bilanz','In „Erledigte Arbeit“ zusätzlich jede einzelne Erledigung mit Datum.'],
  ['log','Verlauf','Liste aller Änderungen.']
 ];
 const PRESETS={einfach:{label:'Einfach',desc:'Nur das Nötigste: Aufgaben verteilen und abhaken.',on:[]},familie:{label:'Familie',desc:'Dazu Einkaufsliste, Chat, Abwesenheit, Tauschen, Geldkonto und Kalender-Export.',on:['shop','chat','away','swap','money','cal']},alles:{label:'Alles',desc:'Alle Funktionen.',on:FEATURES.map(f=>f[0])}};
@@ -362,6 +363,7 @@ const db=firebase.firestore(),auth=firebase.auth(),FV=firebase.firestore.FieldVa
 let user=null,hid=null,mode='loading',unsubs=[],authMsg='',busy=false;
 let calOpen=false,calCfg={who:'',weeks:12,day:5,daily:false,alarm:true},migrating=false,payouts=[],logs=[],tour=null,newVer=null,period='month',whatsNew=null;
 let editFrom=null,editY=0,bulk=null,phMeta=[],phCache={},phBusy={},planPer='4',seen={log:0,t:{}},timers={},msPer='all',chat=[],shop=[],chatDraft='',effPending=null,mkTab='list',job=null,jobs=[],devView=null,proposals=[],serverPlan=null,adminUnlocked=false,pendingLog=[],fb=null,fbView=null,compose=null,editTab='people',poolEdit=null,awayFor=null,legal=null,lf={em:'',pw:''};
+let donePer='month',doneFrom='',doneTo='',doneOpen=new Set();
 let plan=null,checks={},swaps=[],assignCache=null,edit=null,tab='week',sel='all',me=null,curWeek=0,viewMonth=null,nameOf={};
 try{tab=localStorage.getItem('hh_tab')||'week';sel=localStorage.getItem('hh_sel')||'all'}catch(e){}
 function persist(){try{localStorage.setItem('hh_tab',tab);localStorage.setItem('hh_sel',sel);if(hid)localStorage.setItem('hh_me_'+hid,me||'')}catch(e){}}
@@ -509,7 +511,7 @@ function toggle(i,t,p,k,doer,gift,dur){
  const id=wid(i),on=!!rec(i,k);checks[id]=checks[id]||{};
  let val;
  if(on){delete checks[id][k];val=FV.delete()}
- else{const pp=person(timeTo)||{},mp=person(moneyTo)||{},ax=assign(i).find(x=>x.t.id===t.id);const cr=credMin(t,dur);val={p:timeTo,pn:pp.name||'',m:cr.m,n:t.name,t:iso(new Date()),q:ax&&ax.q?ax.q:(t.mode==='fix'?'fix':t.mode==='flex'?'flex':'pool'),ti:t.id,acc:user?user.uid:''};if(dur>0){val.dur=dur;if(cr.m!==t.min)val.pm=t.min;if(cr.capped)val.cap=1}if(me&&me!==doer){val.eby=me;val.ebyn=pname(me)}if(doer!==p){val.for=p;val.forn=pname(p);val.by=doer;val.byn=pname(doer);if(gift)val.gift=gift;assignCache=null}if(F('money')&&mp.wallet&&+t.wage>0&&rate(doer)>0){val.e=r2(val.m/60*rate(doer));if(moneyTo!==timeTo)val.ep=moneyTo;if(t.payer&&person(t.payer)&&t.payer!==moneyTo)val.payer=t.payer}checks[id][k]=val;const dk=k.split('_')[1];toast((doer!==p?pname(doer)+' hat für '+pname(p)+' erledigt'+(gift?' und '+GIFT_LABEL[gift]:'')+': ':'Erledigt: ')+t.name+(dk!==undefined?' ('+WD[+dk]+')':'')+(val.e?', +'+eur(val.e):''))}
+ else{const pp=person(timeTo)||{},mp=person(moneyTo)||{},ax=assign(i).find(x=>x.t.id===t.id);const cr=credMin(t,dur);val={p:timeTo,pn:pp.name||'',m:cr.m,n:t.name,t:iso(new Date()),q:ax&&ax.q?ax.q:(t.mode==='fix'?'fix':t.mode==='flex'?'flex':'pool'),ti:t.id,acc:user?user.uid:''};if(i<nowWeek())val.nb=1;if(dur>0){val.dur=dur;if(cr.m!==t.min)val.pm=t.min;if(cr.capped)val.cap=1}if(me&&me!==doer){val.eby=me;val.ebyn=pname(me)}if(doer!==p){val.for=p;val.forn=pname(p);val.by=doer;val.byn=pname(doer);if(gift)val.gift=gift;assignCache=null}if(F('money')&&mp.wallet&&+t.wage>0&&rate(doer)>0){val.e=r2(val.m/60*rate(doer));if(moneyTo!==timeTo)val.ep=moneyTo;if(t.payer&&person(t.payer)&&t.payer!==moneyTo)val.payer=t.payer}checks[id][k]=val;const dk=k.split('_')[1];toast((doer!==p?pname(doer)+' hat für '+pname(p)+' erledigt'+(gift?' und '+GIFT_LABEL[gift]:'')+': ':'Erledigt: ')+t.name+(dk!==undefined?' ('+WD[+dk]+')':'')+(val.e?', +'+eur(val.e):''))}
  if(on)assignCache=null;
  render();
  H().collection('checks').doc(id).set({[k]:val},{merge:true}).catch(fail);
@@ -654,7 +656,7 @@ function viewWeek(){
  if(i!==nw)h+=`<div style="text-align:center"><button class="btn small" data-a="today">Zur aktuellen Woche</button></div>`;
  if(i<0){const s=parseD(plan.start);return h+`<div class="box muted">Der Plan startet am ${fmtDate(s)}${s.getFullYear()}.</div>`}
  const a=assign(i),ppl=plan.people.filter(p=>sel==='all'||p.id===sel);
- if(i===nw)h+=viewOverdue(ppl);
+ if(i<nw)h+=viewWeekOpen(i,ppl);
  ppl.forEach(p=>{
   const mine=chainOrder(a.filter(x=>x.p===p.id)),s=status(i,p.id),tot=mine.reduce((n,x)=>n+weekMin(x.t),0);
   h+=`<div class="box pbox" style="--pc:${p.color}"><div class="ph"><span class="dot" style="background:${p.color}"></span><h3>${esc(p.name)}</h3><span class="muted small">${fmtMin(tot)}</span>${isAway(p.id,i)?'<span class="tag">abwesend</span>':''}<span class="sp"></span>${s?`<span class="badge ${s}">${s==='done'?'erledigt':s==='open'?'offen':'kommt noch'}</span>`:''}</div>`;
@@ -664,7 +666,7 @@ function viewWeek(){
    h+=`<div class="task"><div class="row">`;
    h+=daily?`<span class="chk ${ok?'on':''}" aria-hidden="true">${ok?'✓':''}</span>`:`<button class="chk ${ok?'on':''}" data-a="chk" data-w="${i}" data-t="${t.id}" data-p="${p.id}" data-k="${t.id}" aria-label="${esc(t.name)} erledigt">${ok?'✓':''}</button>`;
    const recs=keysFor(t).map(k=>rec(i,k)).filter(r=>r&&(r.by||r.p)!==p.id),by=[...new Set(recs.map(r=>r.by||r.p))],gifts=[...new Set(recs.map(r=>r.gift).filter(Boolean))];
-   h+=`<span class="sp ${ok?'done-t':''}"><button class="tname" data-a="tview" data-v="${t.id}">${esc(t.name)}</button>${chgTag(t.id)}${by.length?` <span class="tag">erledigt von ${by.map(x=>esc(pname(x))).join(', ')}${gifts.length?' · '+gifts.map(g=>GIFT_LABEL[g]).join(', ').replace(' schenken',' geschenkt'):''}</span>`:''}${(()=>{const en=[...new Set(keysFor(t).map(k=>rec(i,k)).filter(r=>r&&r.eby&&r.eby!==(r.by||r.p)).map(r=>r.eby))];return en.length?` <span class="muted small">eingetragen von ${en.map(x=>esc(pname(x))).join(', ')}</span>`:''})()}</span>${!daily&&dd.length?` <span class="tag ${!ok&&dd[0]<td?'late':''}" title="geplanter Tag">${WD[dd[0]]}</span>`:''}<span class="muted small">${t.iv==='daily'?t.min+' Min/Tag':daily?t.min+' Min je Mal':t.min+' Min'}</span></div>`;
+   h+=`<span class="sp ${ok?'done-t':''}"><button class="tname" data-a="tview" data-v="${t.id}">${esc(t.name)}</button>${chgTag(t.id)}${keysFor(t).some(k=>{const r=rec(i,k);return r&&r.nb})?' <span class="tag">nachgebucht</span>':''}${by.length?` <span class="tag">erledigt von ${by.map(x=>esc(pname(x))).join(', ')}${gifts.length?' · '+gifts.map(g=>GIFT_LABEL[g]).join(', ').replace(' schenken',' geschenkt'):''}</span>`:''}${(()=>{const en=[...new Set(keysFor(t).map(k=>rec(i,k)).filter(r=>r&&r.eby&&r.eby!==(r.by||r.p)).map(r=>r.eby))];return en.length?` <span class="muted small">eingetragen von ${en.map(x=>esc(pname(x))).join(', ')}</span>`:''})()}</span>${!daily&&dd.length?` <span class="tag ${!ok&&dd[0]<td?'late':''}" title="geplanter Tag">${WD[dd[0]]}</span>`:''}<span class="muted small">${t.iv==='daily'?t.min+' Min/Tag':daily?t.min+' Min je Mal':t.min+' Min'}</span></div>`;
    if(daily)h+=`<div class="days">${dd.map(k=>{const r=rec(i,t.id+'_'+k);return `<button class="${r?'on':''} ${!r&&k<td?'late':''}" data-a="chk" data-w="${i}" data-t="${t.id}" data-p="${p.id}" data-k="${t.id}_${k}">${WD[k]}</button>`}).join('')}</div>`;
    let sub='';
    if(!ok&&t.after){const lk=lockOf(i,t,keysFor(t).find(k=>!rec(i,k))||t.id);if(lk)sub+=`<span class="tag late">🔒 ${lk.p!==p.id?'wartet auf '+esc(lk.t.name)+' ('+esc(pname(lk.p))+')':'erst nach '+esc(lk.t.name)}</span>`}
@@ -752,29 +754,45 @@ function viewPlanned(){
 }
 function viewStats(){
  let h=viewPlanned();
- const tot={},mon={};nameOf={};
- Object.values(checks).forEach(doc=>Object.values(doc||{}).forEach(v=>{
-  if(!v||typeof v!=='object'||!v.p)return;
-  const mm=+v.m||0,mk=String(v.t||'').slice(0,7);if(v.pn)nameOf[v.p]=v.pn;
-  tot[v.p]=(tot[v.p]||0)+mm;(mon[mk]=mon[mk]||{})[v.p]=(mon[mk][v.p]||0)+mm;
- }));
- const ids=plan.people.map(p=>p.id);Object.keys(tot).forEach(id=>{if(!ids.includes(id))ids.push(id)});
- const now=new Date(),curKey=iso(now).slice(0,7);
- h+=`<h2>Erledigt im ${MONTHS[now.getMonth()]}</h2><div class="box">${bars(mon[curKey]||{},ids)}</div>`;
- let mT=0,mP=0;Object.values(checks).forEach(doc=>Object.values(doc||{}).forEach(v=>{if(v&&typeof v==='object'&&+v.dur>0&&v.pm){mT+=+v.m||0;mP+=+v.pm||0}}));
- h+=`<h2>Erledigt insgesamt</h2><div class="box">${bars(tot,ids)}${mT||mP?`<div class="muted small" style="margin-top:8px">Darin enthalten: ${fmtMin(mT)} nach gemessener Zeit gutgeschrieben (geplant wären ${fmtMin(mP)} gewesen).</div>`:''}</div>`;
- const keys=Object.keys(mon).filter(Boolean).sort().reverse();
+ nameOf={};Object.values(checks).forEach(doc=>Object.values(doc||{}).forEach(v=>{if(v&&typeof v==='object'&&v.p&&v.pn)nameOf[v.p]=v.pn}));
+ h+=viewDone();
  if(F('timer'))h+=viewMeasured();
- if(!F('stats'))return h+(F('money')?viewMoney():'');
- h+=`<h2>Monatsverlauf</h2><div class="box">`;
- if(!keys.length)h+=`<div class="muted small">Sobald Aufgaben abgehakt werden, erscheint hier jeder Monat.</div>`;
- else{
-  h+=`<div class="tw"><table class="hist"><tr><th>Monat</th>${ids.map(id=>`<th>${esc(pname(id))}</th>`).join('')}</tr>`;
-  keys.forEach(k=>{const[yy,mm]=k.split('-');h+=`<tr><td>${MONTHS[+mm-1]} ${yy}</td>${ids.map(id=>`<td>${mon[k][id]?fmtMin(mon[k][id]):'–'}</td>`).join('')}</tr>`});
-  h+=`</table></div>`;
- }
- h+=`</div><p class="muted small">Gezählt wird beim Abhaken: Die Minuten gehen an die zuständige Person, im Monat des Abhakens. Tägliche Aufgaben zählen pro Tag, Aufgaben „Bei Bedarf“ beim Buchen.</p>`;
- return h+viewTypes()+(F('money')?viewMoney():'');
+ return h+(F('money')?viewMoney():'');
+}
+function donePeriod(){
+ const n=new Date(),y=n.getFullYear(),m=n.getMonth(),mo=mondayOf(n),D=(k)=>new Date(mo.getFullYear(),mo.getMonth(),mo.getDate()+k);
+ const P={week:[D(0),D(6),'Diese Woche, KW '+isoWeek(mo)],lweek:[D(-7),D(-1),'Letzte Woche, KW '+isoWeek(D(-7))],month:[new Date(y,m,1),new Date(y,m+1,0),MONTHS[m]+' '+y],lmonth:[new Date(y,m-1,1),new Date(y,m,0),MONTHS[(m+11)%12]+' '+(m?y:y-1)],year:[new Date(y,0,1),new Date(y,11,31),'Jahr '+y],all:[null,null,'Seit Beginn']};
+ if(donePer==='custom'){let f=doneFrom,t=doneTo;if(f&&t&&f>t)[f,t]=[t,f];return{f,t,l:(f?fmtD(f):'Beginn')+' bis '+(t?fmtD(t):'heute')}}
+ const r=P[donePer]||P.month;return{f:r[0]?iso(r[0]):'',t:r[1]?iso(r[1]):'',l:r[2]};
+}
+function doneEntries(f,t){
+ const out=[];Object.entries(checks).forEach(([w,doc])=>Object.entries(doc||{}).forEach(([k,v])=>{if(!v||typeof v!=='object'||!v.p)return;const d=String(v.t||'');if(f&&d<f)return;if(t&&d>t)return;out.push({v,w,k})}));
+ return out.sort((a,b)=>String(b.v.t).localeCompare(String(a.v.t))||b.w.localeCompare(a.w));
+}
+function viewDone(){
+ const P=donePeriod(),E=doneEntries(P.f,P.t),ids=plan.people.map(p=>p.id),R={};
+ const get=id=>{if(!R[id]){R[id]={min:0,eur:0,n:0,t:{},list:[]};if(!ids.includes(id))ids.push(id)}return R[id]};
+ ids.forEach(get);
+ E.forEach(({v,w})=>{const tp=v.p,mp=v.ep||v.p,e=+v.e||0,m=+v.m||0,key=v.ti||v.n;
+  const r=get(tp),row=r.t[key]=r.t[key]||{id:v.ti,n:v.n,c:0,m:0,e:0};row.c++;row.m+=m;r.min+=m;r.n++;
+  if(mp===tp){row.e+=e;r.eur+=e}
+  r.list.push({v,w,m,e:mp===tp?e:0});
+  if(e>0&&mp!==tp){const q=get(mp),rr=q.t[key+'~g']=q.t[key+'~g']||{id:v.ti,n:v.n+' (Lohn geschenkt bekommen)',c:0,m:0,e:0};rr.e+=e;q.eur+=e;q.list.push({v,w,m:0,e,gift:1})}
+ });
+ const showE=F('money')&&ids.some(id=>R[id].eur>0),max=Math.max(1,...ids.map(id=>R[id].min)),all=ids.reduce((a,id)=>a+R[id].min,0),allE=ids.reduce((a,id)=>a+R[id].eur,0);
+ const segs=[['week','Diese Woche'],['lweek','Letzte Woche'],['month','Dieser Monat'],['lmonth','Letzter Monat'],['year','Dieses Jahr'],['all','Gesamt'],['custom','Zeitraum …']];
+ let h=`<h2>Erledigte Arbeit</h2><div class="seg" style="flex-wrap:wrap">${segs.map(([k,l])=>`<button data-a="donePer" data-v="${k}" class="${donePer===k?'on':''}">${l}</button>`).join('')}</div><div class="box">`;
+ if(donePer==='custom')h+=`<div class="row" style="gap:8px;flex-wrap:wrap;margin-bottom:8px"><label class="small">von <input type="date" id="doneFrom" class="inp" style="width:auto;display:inline-block" value="${esc(doneFrom)}"></label><label class="small">bis <input type="date" id="doneTo" class="inp" style="width:auto;display:inline-block" value="${esc(doneTo)}"></label></div>`;
+ h+=`<div class="muted small">${esc(P.l)}. Gezählt wird am Tag des Abhakens – Nachbuchungen zählen im Monat der Buchung.</div>`;
+ ids.forEach(id=>{const r=R[id];if(!r.n&&!r.eur&&!person(id))return;const list=Object.values(r.t).sort((a,b)=>b.m-a.m||b.e-a.e);
+  h+=`<details class="pl" data-dk="${id}"${doneOpen.has(id)?' open':''}><summary><div class="bar"><span>${esc(pname(id))}</span><span class="tr"><b style="width:${r.min/max*100}%;background:${pcol(id)}"></b></span><span class="v">${fmtMin(r.min)}</span></div><div class="muted small" style="margin:-2px 0 4px">${r.n} Mal erledigt${showE?' · '+eur(r.eur):''} · Details</div></summary>`;
+  if(!list.length)h+=`<div class="muted small" style="margin:4px 0 10px">In diesem Zeitraum nichts erledigt.</div>`;
+  else{
+   h+=`<div class="tw"><table class="hist dn" style="margin:4px 0 6px"><tr><th>Aufgabe</th><th>Wie oft</th><th>Zeit</th>${showE?'<th>Lohn</th>':''}</tr>${list.map(e=>`<tr><td>${e.id&&taskById(e.id)?`<button class="tname" data-a="tview" data-v="${e.id}">${esc(e.n)}</button>`:esc(e.n)}</td><td>${e.c?e.c+'×':'–'}</td><td>${e.m?fmtMin(e.m):'–'}</td>${showE?`<td>${e.e?eur(e.e):'–'}</td>`:''}</tr>`).join('')}<tr><td><b>Summe</b></td><td><b>${r.n}×</b></td><td><b>${fmtMin(r.min)}</b></td>${showE?`<td><b>${eur(r.eur)}</b></td>`:''}</tr></table></div>`;
+   if(F('stats'))h+=`<details class="pl" data-dk="${id}~l"${doneOpen.has(id+'~l')?' open':''} style="margin:0 0 10px"><summary class="small" style="color:var(--acc)">Alle ${r.list.length} Einträge einzeln</summary><div class="tw"><table class="hist dn dl" style="margin-top:4px"><tr><th>Datum</th><th>Aufgabe</th><th>Zeit</th>${showE?'<th>Lohn</th>':''}</tr>${r.list.map(x=>{const v=x.v,notes=[];const kw='KW '+isoWeek(widDate(x.w));if(v.nb)notes.push('nachgebucht für '+kw);if(v.for&&v.for!==v.p)notes.push('für '+esc(pname(v.for)));if(v.gift)notes.push(GIFT_LABEL[v.gift]);if(x.gift)notes.push('Lohn von '+esc(pname(v.p)));if(+v.dur>0)notes.push('gemessen '+v.dur+' Min');return `<tr><td>${fmtD(v.t)}</td><td style="white-space:normal">${esc(v.n)}${v.q==='flex'?' <span class="muted small">bei Bedarf</span>':''}${notes.length?`<div class="muted small">${notes.join(' · ')}</div>`:''}</td><td>${x.m?fmtMin(x.m):'–'}</td>${showE?`<td>${x.e?eur(x.e):'–'}</td>`:''}</tr>`}).join('')}</table></div></details>`;
+  }
+  h+=`</details>`});
+ return h+`<div class="muted small" style="margin-top:6px">Zusammen: ${fmtMin(all)}${showE?', Lohn '+eur(allE):''}. Auf einen Namen tippen zeigt alle Aufgaben mit Zeit${showE?' und Lohn':''}.</div></div>`;
 }
 function whoLabel(t){return t.person&&person(t.person)?`<span class="small">${esc(person(t.person).name)}</span>`:'<span class="tag">Gruppe</span>'}
 function viewEdit(){
@@ -936,6 +954,8 @@ document.addEventListener('click',async e=>{
  else if(a==='phDel'){delPhoto(v)}
  else if(a==='phView'){phView(v)}
  else if(a==='planPer'){planPer=v;render()}
+ else if(a==='donePer'){donePer=v;if(v==='custom'&&!doneFrom){const n=new Date();doneFrom=iso(new Date(n.getFullYear(),n.getMonth(),1));doneTo=iso(n)}render()}
+ else if(a==='msEdit'){msEdit(v)}
  else if(a==='seenAll'){seen.log=Date.now();seen.t={};saveSeen();render();toast('Alles als gesehen markiert')}
  else if(a==='chgLog'){seen.log=Date.now();seen.t={};saveSeen();tab='edit';editTab='log';persist();render();window.scrollTo(0,0)}
  else if(a==='chgInfo'){chgInfo(v)}
@@ -1084,10 +1104,12 @@ document.addEventListener('keydown',e=>{
  else if(id==='pw'||id==='em'){e.preventDefault();$('[data-a="login"]').click()}
  else if(id==='jc'){e.preventDefault();$('[data-a="join"]').click()}
 });
+document.addEventListener('toggle',e=>{const d=e.target;if(d&&d.dataset&&d.dataset.dk){if(d.open)doneOpen.add(d.dataset.dk);else doneOpen.delete(d.dataset.dk)}},true);
 document.addEventListener('change',e=>{
  if(e.target.dataset&&e.target.dataset.feat&&plan){toggleFeature(e.target.dataset.feat,e.target.checked,e.target);return}
  if(plan&&(e.target.name==='tcCredit'||e.target.id==='tcCap')){setTimerCfg(e.target.name==='tcCredit'?{credit:e.target.value}:{cap:+e.target.value});return}
  if(e.target.id==='statsOn'&&plan){H().update({noStats:!e.target.checked}).then(()=>toast(e.target.checked?'Statistik eingeschaltet':'Statistik ausgeschaltet')).catch(fail);return}
+ if(e.target.id==='doneFrom'||e.target.id==='doneTo'){if(e.target.id==='doneFrom')doneFrom=e.target.value;else doneTo=e.target.value;render();return}
  if(e.target.id==='pwShow'){const p=$('#pw');if(p)p.type=e.target.checked?'text':'password';return}
  if(!plan)return;
  if(['cWho','cWeeks','cDay','cDaily','cAlarm'].includes(e.target.id)){readCal();return}
@@ -1230,13 +1252,13 @@ const TOUR=[
  {tab:'week',sel:'#meBtn',t:'Dein Profil',x:'Oben rechts steht, als wer du angemeldet bist. Dein Konto ist fest mit deiner Person verknüpft, deshalb kannst du nur für dich selbst abhaken, tauschen und buchen, außerdem für Personen ohne eigenes Konto, z. B. kleine Kinder.'},
  {tab:'week',sel:'.chips',t:'Personen',x:'Im Reiter „Plan“ wählst du hier, wessen Aufgaben du sehen willst. „Alle“ zeigt den ganzen Haushalt.'},
  {tab:'week',sel:'.cal',t:'Kalender mit Ampel',x:'Jede Kalenderwoche ist grün, wenn alles erledigt ist, rot, wenn noch etwas offen ist, und grau, wenn sie noch kommt. Tippe auf eine Woche, um sie unten anzuzeigen. Über „Im Kalender eintragen“ übernimmst du die Termine in deinen Handykalender.'},
- {tab:'week',sel:'.task',t:'Abhaken',x:'Erledigte Aufgaben hakst du ab und bestätigst das zweimal. Danach ist das Häkchen endgültig. Bei täglichen Aufgaben gibt es ein Feld pro Tag. Unter „Was ist zu tun?“ stehen die einzelnen Schritte. Liegen gebliebene Aufgaben erscheinen oben unter „Noch offen aus Vorwochen“. Erledigst du eine Aufgabe für jemand anderen, kannst du die Zeit oder den Lohn verschenken.'},
+ {tab:'week',sel:'.task',t:'Abhaken',x:'Erledigte Aufgaben hakst du ab und bestätigst das zweimal. Danach ist das Häkchen endgültig. Bei täglichen Aufgaben gibt es ein Feld pro Tag. Unter „Was ist zu tun?“ stehen die einzelnen Schritte. Was in einer vergangenen Woche offen geblieben ist, steht in dieser Woche oben unter „In dieser Woche offen geblieben“ und lässt sich jederzeit nachbuchen. Erledigst du eine Aufgabe für jemand anderen, kannst du die Zeit oder den Lohn verschenken.'},
  {tab:'week',sel:'#flexBox',f:'flex',t:'Bei Bedarf',x:'Aufgaben „Bei Bedarf“ wie „Auto waschen“ sind nicht eingeplant. Wer sie erledigt, bucht sie hier mit „Erledigt“. Die Zeit zählt in der Bilanz und, falls eingestellt, auch für die faire Verteilung.'},
  {tab:'swap',mk:'jobs',f:'jobs',sel:'.seg',t:'Ausschreiben',x:'Unter Aufgaben → Ausschreiben bietest du eine Aufgabe mit allen Eigenschaften an. Wer sie zuerst übernimmt und das zweimal bestätigt, bekommt sie fest in den Plan.'},
  {tab:'swap',mk:'swap',sel:'.box',t:'Tauschen',f:'swap',x:'Stell ein Paket aus einer oder mehreren deiner Aufgaben zusammen und biete es an. Andere bieten ein eigenes Paket dagegen, die Anzahl muss nicht gleich sein. Erst wenn du annimmst, wird getauscht. Mit „Bescheid geben“ informierst du die anderen per WhatsApp, Signal & Co.'},
  {tab:'shop',f:'shop',sel:'#shopIn',t:'Einkaufsliste',x:'Jeder kann Artikel eintragen. Wer etwas gekauft hat, hakt es ab und bestätigt das zweimal, danach ist es endgültig. Mit „Nochmal“ kommt ein Artikel schnell wieder auf die Liste.'},
  {tab:'chat',f:'chat',sel:'#chatIn',t:'Chat',x:'Der Chat ist für Absprachen im Haushalt. Neue Nachrichten erkennst du an der roten Zahl unten.'},
- {tab:'stats',sel:'h2',t:'Bilanz',x:'Hier siehst du die geplante Arbeit pro Person, die erledigten Minuten im Monat und insgesamt, den Monatsverlauf sowie die Zeit nach Art (feste Person, Gruppe, bei Bedarf) und je Aufgabe.'},
+ {tab:'stats',sel:'h2',t:'Bilanz',x:'Hier siehst du die geplante und die erledigte Arbeit pro Person – für diese Woche, den Monat, das Jahr oder einen frei gewählten Zeitraum, mit Zeit und Lohn je Aufgabe und in Summe.'},
  {tab:'stats',sel:'.seg',t:'Geldkonto und Verdienst',f:'money',x:'Personen mit Geldkonto bekommen für bezahlte Aufgaben Lohn gutgeschrieben. Die Grafik zeigt den Verdienst pro Woche, Monat oder Jahr. Mit „Auszahlen“ setzt du ein Konto auf null.'},
  {tab:'swap',mk:'list',sel:'.box',t:'Aufgaben',x:'Im Reiter „Aufgaben“ legst du Aufgaben an: wie oft, wie lange, wer mitmacht und wie ausgeglichen wird – fair im ganzen Haushalt, fair unter den Teilnehmern oder ohne Ausgleich. Mit nur einer Person ist es eine feste Aufgabe.'},
  {tab:'edit',et:'pools',sel:'.box',t:'Gruppen',f:'groups',x:'Gruppen sind Personenkreise mit eigener fairer Verteilung, z. B. „Erwachsene“ und „Kinder“. Pro Person stellst du den Anteil ein: 50 % heißt halb so viel Zeit wie die anderen.'},
@@ -1379,23 +1401,24 @@ function ensureFrozen(){
  H().update(...args).catch(e=>console.error(e));
 }
 
-/* Noch offen aus Vorwochen */
+/* In vergangenen Wochen offen geblieben */
 function obsoleteOcc(t,j){
  const live=plan.tasks.find(y=>y.id===t.id);if(!live||live.mode==='flex')return true;
  if(Object.entries(checks[wid(j)]||{}).some(([k,v])=>v&&typeof v==='object'&&v.q!=='flex'&&(v.ti||k.split('_')[0])===t.id)&&isMulti(live)!==isMulti(t))return true;
  const st=weekMon(j).getTime();
  return logs.some(l=>l.ts>=st&&l.ts<st+7*DAY&&(!l.eff||widIdx(l.eff)<=j)&&chgTaskId(l)===t.id&&(l.act==='Aufgabe gelöscht'||(l.act==='Aufgabe geändert'&&/Intervall:|Tage:|Zuständig:/.test(l.detail||''))));
 }
-function viewOverdue(ppl){
- const nw=nowWeek(),ids=new Set(ppl.map(p=>p.id)),items=[];
- for(let j=Math.max(0,nw-8);j<nw;j++)assign(j).forEach(x=>{if(ids.has(x.p)&&!keysFor(x.t).every(k=>rec(j,k))&&!obsoleteOcc(x.t,j))items.push({j,x})});
+function viewWeekOpen(j,ppl){
+ const ids=new Set(ppl.map(p=>p.id)),items=[];
+ assign(j).forEach(x=>{if(ids.has(x.p)&&!keysFor(x.t).every(k=>rec(j,k))&&!obsoleteOcc(x.t,j))items.push({j,x})});
  if(!items.length)return '';
- let h=`<div class="box overdue"><div class="ph"><h3>Noch offen aus Vorwochen</h3><span class="sp"></span><span class="badge open">${items.length}</span></div>`;
- items.forEach(({j,x})=>{const t=x.t,mon=weekMon(j),daily=isMulti(t);
+ const mins=items.reduce((a,{x})=>a+x.t.min*keysFor(x.t).filter(k=>!rec(j,k)).length,0),now=new Date();
+ let h=`<div class="box overdue"><div class="ph"><h3>In dieser Woche offen geblieben</h3><span class="sp"></span><span class="badge open">${items.length}</span></div><div class="muted small" style="margin-bottom:4px">${fmtMin(mins)} nicht abgehakt. Wurde etwas doch erledigt, kannst du es hier oder unten jederzeit nachbuchen. Zeit und Lohn zählen dann im Monat der Buchung (${MONTHS[now.getMonth()]}).</div>`;
+ items.forEach(({j,x})=>{const t=x.t,daily=isMulti(t);
   h+=`<div class="task"><div class="row">`;
   if(daily){const done=keysFor(t).filter(k=>rec(j,k)).length;h+=`<span class="chk" aria-hidden="true"></span><span class="sp">${esc(t.name)} <span class="muted small">${done} von ${keysFor(t).length} Tagen</span></span>`}
-  else h+=`<button class="chk" data-a="chk" data-w="${j}" data-t="${t.id}" data-p="${x.p}" data-k="${t.id}" aria-label="${esc(t.name)} erledigt"></button><span class="sp">${esc(t.name)}</span>`;
-  h+=`<span class="muted small">${ppl.length>1?esc(pname(x.p))+', ':''}KW ${isoWeek(mon)}</span>${daily?`<button class="btn sm" data-a="week" data-v="${j}">Öffnen</button>`:''}</div></div>`});
+  else h+=`<button class="chk" data-a="chk" data-w="${j}" data-t="${t.id}" data-p="${x.p}" data-k="${t.id}" aria-label="${esc(t.name)} nachbuchen"></button><span class="sp">${esc(t.name)}</span>`;
+  h+=`<span class="muted small">${ppl.length>1?esc(pname(x.p))+', ':''}${t.min} Min${daily?'/Tag':''}</span></div></div>`});
  return h+`</div>`;
 }
 /* Tauschliste gruppieren */
@@ -1430,7 +1453,7 @@ function viewFlex(i){
  let h=`<div class="box" id="flexBox"><div class="ph"><h3>Bei Bedarf</h3><span class="sp"></span><span class="muted small">jederzeit buchbar</span></div>`;
  fl.forEach(t=>{h+=`<div class="task"><div class="row"><span class="sp">${esc(t.name)}${chgTag(t.id)}</span><span class="muted small">${t.min} Min${+t.wage>0&&me&&rate(me)>0?', '+eur(t.min/60*rate(me)):''}</span>${can&&F('timer')&&i===nw?(()=>{const mt=myTimer();return mt&&mt.ti===t.id?`<span class="clk small" data-tmr>${fmtClock(tmrMs(mt))}</span><button class="btn sm pri" data-a="tStop">Stopp</button>`:`<button class="btn sm" data-a="tStart" data-w="${i}" data-t="${t.id}" data-p="" data-k="flex" aria-label="Timer für ${esc(t.name)} starten">▶</button>`})():''}${can?`<button class="btn sm pri" data-a="flexDo" data-t="${t.id}">Erledigt</button>`:''}</div>${stepsBlock(t,'margin-left:0')}</div>`});
  if(!can)h+=`<div class="muted small" style="margin-top:6px">Buchen geht nur in der aktuellen oder einer vergangenen Woche.</div>`;
- if(recs.length)h+=`<div class="muted small" style="margin-top:10px">Diese Woche gebucht:</div>`+recs.map(([k,v])=>`<div class="ti"><span class="dot" style="background:${pcol(v.p)}"></span><span class="sp small">${esc(v.n)}, ${esc(pname(v.p))}<span class="muted"> · ${fmtD(v.t)}${v.eby&&v.eby!==v.p?' · eingetragen von '+esc(pname(v.eby)):''}</span></span><span class="muted small">${v.m} Min</span>${adminOn()&&adminUnlocked?`<button class="icon" data-a="flexUndo" data-w="${i}" data-k="${esc(k)}" aria-label="Buchung löschen">✕</button>`:'<span class="muted small" title="endgültig">🔒</span>'}</div>`).join('');
+ if(recs.length)h+=`<div class="muted small" style="margin-top:10px">Diese Woche gebucht:</div>`+recs.map(([k,v])=>`<div class="ti"><span class="dot" style="background:${pcol(v.p)}"></span><span class="sp small">${esc(v.n)}, ${esc(pname(v.p))}<span class="muted"> · ${v.nb?'nachgebucht am ':''}${fmtD(v.t)}${v.eby&&v.eby!==v.p?' · eingetragen von '+esc(pname(v.eby)):''}</span></span><span class="muted small">${v.m} Min</span>${adminOn()&&adminUnlocked?`<button class="icon" data-a="flexUndo" data-w="${i}" data-k="${esc(k)}" aria-label="Buchung löschen">✕</button>`:'<span class="muted small" title="endgültig">🔒</span>'}</div>`).join('');
  return h+`</div>`;
 }
 async function flexDo(t,dur){
@@ -1440,9 +1463,9 @@ async function flexDo(t,dur){
  if(!list.length){uiAlert('„'+t.name+'“ ist nur für '+pp0.map(pname).join(', ')+' vorgesehen.');return false}
  const p=list.length===1?list[0].id:await dlgShow({title:t.name+' erledigt',text:'Wer hat die Aufgabe erledigt?',choices:list.map(x=>({v:x.id,l:x.id===me?x.name+' (ich)':x.name,color:x.color})),cancel:'Abbrechen'});
  if(!p||!person(p))return false;
- if(!await confirmTwice(t.name+' (Bei Bedarf)',[['Erledigt von',pname(p)],...credRows(t,dur,credMin(t,dur)),...(F('money')&&+t.wage>0&&rate(p)>0?[['Lohn',eur(credMin(t,dur).m/60*rate(p))]]:[])]))return false;
+ if(!await confirmTwice(t.name+' (Bei Bedarf)',[...(i<nw?[['Woche','KW '+isoWeek(weekMon(i))],['Nachbuchung','zählt im '+MONTHS[new Date().getMonth()]+' '+new Date().getFullYear()]]:[]),['Erledigt von',pname(p)],...credRows(t,dur,credMin(t,dur)),...(F('money')&&+t.wage>0&&rate(p)>0?[['Lohn',eur(credMin(t,dur).m/60*rate(p))]]:[])]))return false;
  const pp=person(p),id=wid(i),k='x_'+t.id+'_'+Date.now().toString(36),mon=weekMon(i),d=i===nw?new Date():new Date(mon.getFullYear(),mon.getMonth(),mon.getDate()+6);
- const cr=credMin(t,dur),val={p,pn:pp.name,m:cr.m,n:t.name,t:iso(d),q:'flex',ti:t.id,f:t.credit===false?0:1};if(dur>0){val.dur=dur;if(cr.m!==t.min)val.pm=t.min;if(cr.capped)val.cap=1}if(me!==p){val.eby=me;val.ebyn=pname(me)}if(F('money')&&pp.wallet&&+t.wage>0&&rate(p)>0){val.e=r2(val.m/60*rate(p));if(t.payer&&person(t.payer)&&t.payer!==p)val.payer=t.payer}
+ const cr=credMin(t,dur),val={p,pn:pp.name,m:cr.m,n:t.name,t:iso(new Date()),q:'flex',ti:t.id,f:t.credit===false?0:1};if(i<nw){val.nb=1;val.wd=iso(d)}if(dur>0){val.dur=dur;if(cr.m!==t.min)val.pm=t.min;if(cr.capped)val.cap=1}if(me!==p){val.eby=me;val.ebyn=pname(me)}if(F('money')&&pp.wallet&&+t.wage>0&&rate(p)>0){val.e=r2(val.m/60*rate(p));if(t.payer&&person(t.payer)&&t.payer!==p)val.payer=t.payer}
  checks[id]=checks[id]||{};checks[id][k]=val;assignCache=null;render();
  toast(t.name+' gebucht für '+pp.name+(val.e?', +'+eur(val.e):''));
  H().collection('checks').doc(id).set({[k]:val},{merge:true}).catch(fail);
@@ -1545,24 +1568,43 @@ function viewMeasured(){
  let h=`<h2>Gemessene Zeiten</h2><div class="box"><div class="seg" style="margin:0 0 10px"><button data-a="msPer" data-v="month" class="${msPer==='month'?'on':''}">Laufender Monat</button><button data-a="msPer" data-v="all" class="${msPer==='all'?'on':''}">Gesamt</button></div>`;
  if(!rows.length)return h+`<div class="muted small">Noch keine Messungen${msPer==='month'?' in diesem Monat':''}. Starte im Plan bei einer Aufgabe den Timer mit ▶ und stoppe ihn, wenn du fertig bist.</div></div>`;
  rows.forEach(r=>{const p=Math.round(r.dev*100),c=Math.abs(p)<=10?'g':Math.abs(p)<=25?'o':'r',per=Object.entries(r.by).map(([id,a])=>esc(pname(id))+' '+Math.round(median(a))+' Min'+(a.length>1?' ('+a.length+'×)':'')).join(' · ');
-  h+=`<div class="ti" style="align-items:flex-start"><div class="sp"><div class="row" style="gap:8px"><b class="sp">${esc(r.t.name)}</b><span class="dv ${c}">${p>0?'+':''}${p} %</span></div><div class="small">geplant ${r.t.min} Min · gemessen ${Math.round(r.med)} Min <span class="muted">(${r.n}×)</span></div>${r.cap?`<div class="small" style="color:var(--warn)">Obergrenze griff ${r.cap}×</div>`:''}${Object.keys(r.by).length>1?`<div class="muted small">${per}</div>`:''}${r.cand?`<button class="btn sm" style="margin-top:6px" data-a="msAdopt" data-v="${r.id}">${r.sug} Min als Dauer übernehmen</button>`:r.n<3&&r.sug!==r.t.min?`<div class="muted small">Vorschlag ab 3 Messungen</div>`:''}</div></div>`});
+  h+=`<div class="ti" style="align-items:flex-start"><div class="sp"><div class="row" style="gap:8px"><b class="sp">${esc(r.t.name)}</b><span class="dv ${c}">${p>0?'+':''}${p} %</span></div><div class="small">geplant ${r.t.min} Min · gemessen ${Math.round(r.med)} Min <span class="muted">(${r.n}×)</span></div>${r.cap?`<div class="small" style="color:var(--warn)">Obergrenze griff ${r.cap}×</div>`:''}${Object.keys(r.by).length>1?`<div class="muted small">${per}</div>`:''}<div class="row" style="gap:6px;margin-top:6px;flex-wrap:wrap">${r.cand?`<button class="btn sm pri" data-a="msAdopt" data-v="${r.id}">${r.sug} Min übernehmen</button>`:''}<button class="btn sm" data-a="msEdit" data-v="${r.id}">Dauer anpassen …</button></div></div></div>`});
  if(nc>1)h+=`<div style="margin-top:10px"><button class="btn pri sm" data-a="msAdoptAll">Alle ${nc} Vorschläge übernehmen</button></div>`;
- return h+`</div><p class="muted small">Gemessen wird mit dem Timer im Plan. Gezeigt wird der Median, damit einzelne Ausreißer – etwa ein vergessener Timer – nicht ins Gewicht fallen. Vorschläge gibt es ab 3 Messungen, gerundet auf 5 Minuten. ${plan.timerCfg&&plan.timerCfg.credit==='meas'?'Gutschrift und Lohn richten sich nach der gemessenen Zeit'+(+plan.timerCfg.cap>0?' (höchstens '+Math.round(plan.timerCfg.cap*100)+' % der geplanten)':'')+', die Verteilung nach der geplanten Dauer.':'Gutschrift, Fairness und Lohn richten sich nach der geplanten Dauer, bis du eine gemessene Zeit übernimmst.'}</p>`;
+ return h+`</div><p class="muted small">Gemessen wird mit dem Timer im Plan. Gezeigt wird der Median, damit einzelne Ausreißer – etwa ein vergessener Timer – nicht ins Gewicht fallen. Vorschläge gibt es ab 3 Messungen, gerundet auf 5 Minuten. Mit „Dauer anpassen“ übernimmst du jederzeit eine gemessene Zeit oder trägst selbst eine ein. ${plan.timerCfg&&plan.timerCfg.credit==='meas'?'Gutschrift und Lohn richten sich nach der gemessenen Zeit'+(+plan.timerCfg.cap>0?' (höchstens '+Math.round(plan.timerCfg.cap*100)+' % der geplanten)':'')+', die Verteilung nach der geplanten Dauer.':'Gutschrift, Fairness und Lohn richten sich nach der geplanten Dauer, bis du eine gemessene Zeit übernimmst.'}</p>`;
 }
 async function offerAdopt(t,dur){
  if(!t||!dur)return;const cur=plan.tasks.find(x=>x.id===t.id);if(!cur||Math.abs(cur.min-dur)<Math.max(2,cur.min*0.1))return;
  const s=measStat(t.id),ch=[{v:'d',l:'Ja, '+dur+' Min übernehmen'}];
- if(s.n>=3&&s.sug!==dur&&s.sug!==cur.min)ch.push({v:'m',l:'Ja, Median aller Messungen: '+s.sug+' Min'});
+ if(s.n>=3&&s.sug!==dur&&s.sug!==cur.min)ch.push({v:'m',l:'Ja, Median aller Messungen: '+s.sug+' Min'});ch.push({v:'x',l:'✎ Andere Zeit selbst eintragen'});
  const v=await dlgShow({title:'Gemessene Zeit übernehmen?',text:'„'+cur.name+'“ ist mit '+cur.min+' Min geplant, gemessen wurden '+dur+' Min'+(s.n>1?' (Median aus '+s.n+' Messungen: '+s.med+' Min)':'')+'.\n\nSoll die gemessene Zeit die neue Dauer der Aufgabe werden? Das ändert die Verteilung, den Lohn und die Fairness.',choices:ch,cancel:'Nein, '+cur.min+' Min lassen'});
  if(!v)return;
+ if(v==='x'){const n=await askMinutes(cur,dur);if(n&&n!==cur.min)await adoptMins([{id:t.id,min:n,man:1}]);return}
  await adoptMins([v==='m'?{id:t.id,min:s.sug,n:s.n}:{id:t.id,min:dur}]);
+}
+async function askMinutes(t,def){
+ const v=await dlgShow({title:'Dauer selbst eintragen',text:'Wie viele Minuten soll „'+t.name+'“ künftig dauern? Bisher: '+t.min+' Min.',input:String(def||t.min),inputType:'number',ok:'Übernehmen',cancel:'Abbrechen'});
+ if(v===null||v===false)return 0;const n=Math.round(+String(v).replace(',','.'));if(!(n>0)||n>1440){await uiAlert('Bitte eine Zahl zwischen 1 und 1440 eingeben.');return 0}return n;
+}
+async function msEdit(id){
+ const t=plan.tasks.find(x=>x.id===id);if(!t)return;const r=measRows().find(x=>x.id===id),s=measStat(id);
+ const all=[];Object.values(checks).forEach(doc=>Object.values(doc||{}).forEach(v=>{if(v&&typeof v==='object'&&v.ti===id&&+v.dur>0)all.push(v)}));all.sort((a,b)=>String(b.t).localeCompare(String(a.t)));
+ const last=all[0]?Math.round(+all[0].dur):0,ch=[],seen0=new Set([t.min]);
+ if(s.n&&!seen0.has(s.med)){ch.push({v:'med:'+s.med,l:'Gemessene Zeit übernehmen – '+s.med+' Min'+(s.n>1?' (Median aus '+s.n+' Messungen)':'')});seen0.add(s.med)}
+ if(s.n>1&&s.sug&&!seen0.has(s.sug)){ch.push({v:'med:'+s.sug,l:'Gerundet – '+s.sug+' Min'});seen0.add(s.sug)}
+ if(last&&!seen0.has(last)){ch.push({v:'med:'+last,l:'Letzte Messung – '+last+' Min ('+fmtD(all[0].t)+')'});seen0.add(last)}
+ ch.push({v:'manual',l:'✎ Zeit selbst eintragen'});
+ const c=await dlgShow({title:'Dauer von „'+t.name+'“',text:'Geplant: '+t.min+' Min'+(s.n?', gemessen (Median): '+s.med+' Min aus '+s.n+' Messung'+(s.n>1?'en':''):'')+'.\n\nDie neue Dauer ändert Verteilung, Fairness und Lohn ab dem gewählten Zeitpunkt.',choices:ch,cancel:'Abbrechen'});
+ if(!c)return;
+ let n=0;if(c==='manual')n=await askMinutes(t,s.med||t.min);else n=+c.split(':')[1];
+ if(!n)return;if(n===t.min){toast('Dauer bleibt bei '+n+' Min');return}
+ await adoptMins(c==='manual'?[{id,min:n,man:1}]:[{id,min:n,n:s.n}]);
 }
 async function adoptMins(list){
  list=list.filter(x=>{const t=plan.tasks.find(y=>y.id===x.id);return t&&x.min>0&&x.min!==t.min});
  if(!list.length)return;
  const t0=plan.tasks.find(y=>y.id===list[0].id);
  if(!await chooseEff(list.length===1?'Die neue Dauer für „'+t0.name+'“':'Die neuen Dauern für '+list.length+' Aufgaben'))return;
- list.forEach(x=>{const k=plan.tasks.findIndex(y=>y.id===x.id),t=plan.tasks[k];logEntry('Dauer aus Messung übernommen',t.name,t.min+' → '+x.min+' Min'+(x.n?' (Median aus '+x.n+' Messungen)':' (gemessen)'),t.id);plan.tasks[k]=normTask(Object.assign(stripTask(t),{min:x.min}),plan)});
+ list.forEach(x=>{const k=plan.tasks.findIndex(y=>y.id===x.id),t=plan.tasks[k];logEntry(x.man?'Aufgabe geändert':'Dauer aus Messung übernommen',t.name,x.man?'Dauer: '+t.min+' → '+x.min+' Min (von Hand in der Bilanz)':t.min+' → '+x.min+' Min'+(x.n?' (Median aus '+x.n+' Messungen)':' (gemessen)'),t.id);plan.tasks[k]=normTask(Object.assign(stripTask(t),{min:x.min}),plan)});
  savePlan();okToast(list.length===1?'Neue Dauer: '+list[0].min+' Min':list.length+' Dauern übernommen');
 }
 
@@ -2012,6 +2054,7 @@ async function finalCheck(i,t,p,k,doer,gift,dur){
  if(me&&me!==d)rows.push(['Eingetragen von',pname(me)]);
  if(gift)rows.push(['Geschenkt',GIFT_LABEL[gift].replace(' geschenkt','')]);
  const cr=credMin(t,dur);rows.push(...credRows(t,dur,cr));
+ if(i<nowWeek())rows.push(['Nachbuchung','zählt im '+MONTHS[new Date().getMonth()]+' '+new Date().getFullYear()]);
  const mt=gift==='money'||gift==='both'?p:d;if(F('money')&&+t.wage>0&&person(mt)&&person(mt).wallet&&rate(d)>0)rows.push(['Lohn',eur(cr.m/60*rate(d))+' für '+pname(mt)]);
  if(!await confirmTwice(t.name,rows))return false;
  if(rec(i,k))return true;
