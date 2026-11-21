@@ -312,7 +312,7 @@ const COLORS=['#2b5d8a','#c0563f','#2e8a5a','#8456b0','#c28a1e','#21918f','#b548
 const WD=['Mo','Di','Mi','Do','Fr','Sa','So'];
 const MONTHS=['Januar','Februar','März','April','Mai','Juni','Juli','August','September','Oktober','November','Dezember'];
 const DAY=864e5;
-const APP_VERSION='18.6';
+const APP_VERSION='18.6.1';
 const DATA_VERSION=5;
 const CHANGELOG={'18.6':['Einrichtungsassistent für neue Haushalte: Name, Personen mit Rollen, Einladen, Funktionen mit Erklärung, Startbildschirm','Tipp auf das Fairloop-Logo: Über Fairloop, Jetzt teilen, als App installieren','Einladung mit Link teilen: Der Code wird beim Beitreten automatisch eingetragen','Als App installieren: Anleitung bzw. Button unter Einstellungen → Haushalt & Konto'],'18.5':['Fairloop weiterempfehlen: den App-Link per WhatsApp, Signal, E-Mail, SMS und mehr teilen – unter Einstellungen → Haushalt & Konto, am Ende der Führung und auf der Anmeldeseite'],'18.4':['Rollen für Personen: Elternteil, Kind oder Mitglied','Beim Abhaken und Buchen kann jeder nur noch sich selbst auswählen, Eltern zusätzlich die Kinder','Kinderprofile brauchen kein eigenes Konto, die Eltern bedienen sie'],'18.3':['Bilanz neu: „Erledigte Arbeit“ je Person für diese oder letzte Woche, Monat, Jahr oder einen frei gewählten Zeitraum – mit Zeit und Lohn je Aufgabe, Summe und auf Wunsch jeder einzelnen Erledigung','Monatsverlauf, „Erledigt im Monat/insgesamt“ und „Zeit nach Art/je Aufgabe“ entfallen dafür','Gemessene Zeiten: „Dauer anpassen“ übernimmt eine gemessene Zeit direkt oder eine selbst eingetragene','„Noch offen aus Vorwochen“ steht jetzt in der jeweiligen vergangenen Woche statt in der aktuellen','Nachbuchen: Aufgaben lassen sich in jeder vergangenen Woche nachträglich abhaken. Zeit und Lohn zählen im Monat der Buchung'],'18.2':['Ein Tipp auf eine Aufgabe im Plan zeigt, was zu tun ist – mit Schritten und Fotos. Über „Bearbeiten“ geht es in den Editor'],'18.1':['Aufgaben lassen sich direkt aus dem Plan und aus der Bilanz öffnen: auf den Namen tippen. Danach geht es zurück an dieselbe Stelle'],'18.0':['Aufgaben zeigen, wer sie angelegt und zuletzt geändert hat','Startdatum: Aufgaben können ab einem bestimmten Tag starten','Mehrere Aufgaben auf einmal ändern','Reihenfolge: Eine Aufgabe kann nach einer anderen kommen, z. B. Wischen nach Abstauben – auf Wunsch von derselben Person','Fotos bei Aufgaben als Anleitung'],'17.4':['Bilanz „Geplante Arbeit“: wählbar diese Woche, nächste Woche, 4 Wochen, bis der Zyklus komplett ist oder 52 Wochen – je Person mit allen Aufgaben und Zeiten'],'17.3':['Kalender aufgeräumt: die Punkte pro Person neben der Kalenderwoche sind entfernt, der Fortschrittsring bleibt'],'17.2':['Stundenlohn pro Person statt pro Aufgabe: unter Einstellungen → Personen. Bei der Aufgabe wird nur noch festgelegt, ob sie bezahlt wird','Plan-Updates: Zahl am Reiter „Plan“, Hinweis bei Änderungen während die App offen ist, Schild „geändert“ auch bei eigenen Änderungen (3 Tage)','Im Verlauf steht, ab wann eine Änderung gilt','Aufgaben, die durch eine Änderung wegfallen, erscheinen nicht mehr als „offen aus Vorwochen“'],'17.1':['Beim Abhaken mit Timer steht, wo man einstellt, ob die gemessene oder die geplante Zeit gutgeschrieben wird'],'17.0':['Timer-Gutschrift: Auf Wunsch zählt die gemessene oder von Hand eingetragene Zeit für Bilanz und Lohn – einstellbar unter Einstellungen → Funktionen, optional mit Obergrenze','Hinweis auf Änderungen: Im Plan steht, was sich seit deinem letzten Besuch an Aufgaben, Personen und Einstellungen geändert hat','Geänderte Aufgaben tragen das Schild „geändert“'],'16.4':['Fehler behoben: Werden die Wochentage einer Aufgabe geändert, die diese Woche schon teilweise abgehakt ist, gilt die Änderung erst ab nächster Woche','Fehler behoben: Abhaken konnte in seltenen Fällen beim Speichern scheitern','Nach dem Timer wird nur noch bei spürbarer Abweichung gefragt, ob die Dauer übernommen werden soll','Beim Stoppen des Timers steht „ich“ in der Auswahl oben'],'16.3':['Jeder kann für jeden abhaken: beim Abhaken auswählen, wer die Aufgabe erledigt hat – mit doppelter Bestätigung','Im Plan steht, wer eingetragen hat, wenn es nicht die ausführende Person war'],'16.2':['„Ab wann soll das gelten?“ kommt beim Ein- und Ausschalten von Funktionen nur noch, wenn sich dadurch die Verteilung ändert (Abwesenheit)'],'16.1':['Beim Stoppen des Timers: gemessene Zeit übernehmen, Zeit manuell eingeben oder Zeiterfassung abbrechen'],'16.0':['Wochentage pro Aufgabe: z. B. täglich nur Mo–Fr oder wöchentlich mehrmals (Mi + Sa)','Timer: Start und Stopp bei jeder Aufgabe, die gemessene Zeit lässt sich beim Abhaken korrigieren','Bilanz „Gemessene Zeiten“: geplant gegen gemessen, mit Übernahme als neue Dauer nach Bestätigung'],'15.0':['Neuer Reiter „Aufgaben“ statt „Markt“: alle Aufgaben, Tauschen und Ausschreiben an einem Ort','Ausschreiben vereinfacht: Wer zuerst mit doppelter Bestätigung übernimmt, bekommt die Aufgabe'],'14.0':['Einfacher: Bei jeder Aufgabe legst du fest, wer mitmacht und wie ausgeglichen wird. Gruppen entfallen','Anteil (z. B. Kinder 50 %) jetzt direkt bei der Person','Neu: Chat für den Haushalt','Neu: Einkaufsliste mit doppelter Bestätigung beim Abhaken'],'13.0':['Beim Ändern von Aufgaben, Gruppen, Personen und Funktionen wählst du, ab wann die Änderung gilt: sofort, nächste Woche, nächster Monat oder ab einem Tag'],'12.2':['Bereits abgehakte Aufgaben bleiben bei ihrer Person, auch wenn Einstellungen geändert werden'],'12.1':['Hinweisleiste verschwindet wieder vollständig'],'12.0':['Neues Design: hell, freundlich, mit Navigation am unteren Rand','Fortschrittsringe im Kalender zeigen, wie viel jeder Woche erledigt ist'],'11.0':['Persönlicher Zugang: Jedes Konto gehört fest zu einer Person','Man kann nur noch für sich selbst abhaken, tauschen und buchen – und für Personen ohne eigenes Konto','Der Admin ist an sein Konto gebunden, die PIN entfällt dann'],'10.0':['Funktionen ein- und ausschalten unter Einstellungen → Funktionen','Voreinstellungen „Einfach“, „Familie“ und „Alles“','Führung zeigt nur eingeschaltete Funktionen'],'9.1':['Abhaken und Buchen werden doppelt bestätigt und sind danach endgültig','Korrekturen nur noch durch den entsperrten Admin'],'9.0':['Neuer Reiter „Markt“: Tauschen und Ausschreibungen an einem Ort','Ausschreibungen: Aufgabe anbieten, annehmen oder Gegenvorschlag machen; vereinbarte Aufgaben kommen automatisch in den Plan','Neue Aufgabenart „einmalig“ mit Datum','Lohn kann vom Haushalt oder von einer Person bezahlt werden','Pro Aufgabe wählbar, ob sie für die faire Verteilung zählt'],'8.4':['Zeit oder Lohn schenken: Wer eine Aufgabe für jemand anderen erledigt, kann sich die Zeit, den Lohn oder beides nicht gutschreiben lassen'],'8.3':['Aufgaben anderer übernehmen: beim Abhaken auswählen, wer es erledigt hat','Tauschen ohne Gegenleistung: Aufgaben einfach übernehmen'],'8.2':['Die App heißt jetzt Fairloop'],'8.1':['Anonyme Nutzungsstatistik (abschaltbar unter Haushalt & Konto)','Entwicklerbereich für den Betreiber'],'8.0':['Optionale Admin-Freigabe: Änderungen an Aufgaben, Personen und Gruppen bestätigt der Admin per PIN','Feedback-Funktion für die Beta-Phase (unten auf jeder Seite)'],'7.0':['Neue, selbsterklärende Namen: Plan, Tauschen, Bilanz, Einstellungen, Gruppen','Tauschpakete: mehrere Aufgaben anbieten und mehrere gegenbieten, die Anzahl muss nicht gleich sein'],'6.2':['Impressum vervollständigt'],'6.1':['Führung und Hilfetexte an die neuen Funktionen angepasst'],'6.0':['Mehrere Gruppen mit eigenem Personenkreis','Anteil pro Person im Pool, z. B. Kinder 50 %','Teilnehmer pro Aufgabe festlegen','Abwesenheit/Urlaub: der Pool verteilt automatisch um','Flexible Zusatzaufgaben, jederzeit buchbar','Auswertung nach festen, Pool- und flexiblen Aufgaben','Bearbeiten in Unterbereiche gegliedert','Impressum, Datenschutz und „Konto löschen“'],'5.0':['Beim Start „Wer bist du?“: Die Seite zeigt zuerst deine Aufgaben','„Noch offen aus Vorwochen“ in der aktuellen Woche','Eigene Dialoge und „Rückgängig“ nach dem Abhaken','Vergangene Wochen bleiben fest, auch wenn der Plan geändert wird','Tauschangebote per WhatsApp, Signal & Co. teilen','Mitglieder verwalten, Einladungscode erneuern, Haushalt verlassen','Als App auf dem Home-Bildschirm installierbar'],'4.2':['Kalender-Export funktioniert jetzt auch auf Android','Erklärungen zum Kalender-Export und zur Anmeldung'],'4.1':['Kalender-Export: Aufgaben als Termine in den iPhone- oder Google-Kalender übernehmen','Hinweis zum Einladungscode auf der Anmeldeseite'],'4.0':['Geldkonto pro Person mit Stundenlohn je Aufgabe','Verdienst-Grafik nach Woche, Monat oder Jahr','Logbuch für Änderungen an Aufgaben und Personen','Führung durch die Funktionen (Fragezeichen oben)','Sicherung herunterladen und einspielen']};
 const eur=v=>(Math.round((+v||0)*100)/100).toLocaleString('de-DE',{style:'currency',currency:'EUR'});
@@ -366,6 +366,7 @@ let user=null,hid=null,mode='loading',unsubs=[],authMsg='',busy=false;
 let calOpen=false,calCfg={who:'',weeks:12,day:5,daily:false,alarm:true},migrating=false,payouts=[],logs=[],tour=null,newVer=null,period='month',whatsNew=null;
 let editFrom=null,editY=0,bulk=null,phMeta=[],phCache={},phBusy={},planPer='4',seen={log:0,t:{}},timers={},msPer='all',chat=[],shop=[],chatDraft='',effPending=null,mkTab='list',job=null,jobs=[],devView=null,proposals=[],serverPlan=null,adminUnlocked=false,pendingLog=[],fb=null,fbView=null,compose=null,editTab='people',poolEdit=null,awayFor=null,legal=null,lf={em:'',pw:''};
 let wiz=null,instEvt=null,joinPrefill='';
+let TEST_MODE=false;try{if(/[?&]test\b/.test(location.search))sessionStorage.setItem('hh_test','1');TEST_MODE=sessionStorage.getItem('hh_test')==='1'}catch(e){TEST_MODE=/[?&]test\b/.test(location.search)}
 try{const m=location.hash.match(/join=([A-Za-z0-9]{6,12})/);if(m){joinPrefill=m[1].toUpperCase();history.replaceState(null,'',location.pathname)}}catch(e){}
 window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();instEvt=e});
 window.addEventListener('appinstalled',()=>{instEvt=null;toast('Fairloop ist jetzt auf dem Startbildschirm')});
@@ -620,6 +621,7 @@ function viewLogin(){
  <button class="btn wide" data-a="signup" ${busy?'disabled':''}>Neues Konto erstellen</button>
  <label class="cb" style="font-size:13px"><input type="checkbox" id="consent" ${lf.ok?'checked':''}> <span>Für neue Konten: Ich habe die <button class="link" style="padding:0;font-size:13px" data-a="legal" data-v="ds">Datenschutzerklärung</button> gelesen.</span></label>
  <button class="link" data-a="reset">Passwort vergessen?</button></div>
+ ${TEST_MODE?`<h2>Testmodus</h2><div class="box"><div class="muted small">Startet mit einem frischen Test-Konto ohne E-Mail. Beim Abmelden werden Test-Konto und Test-Haushalt gelöscht.</div><button class="btn pri wide" data-a="testLogin" ${busy?'disabled':''}>Test starten</button></div>`:''}
  <h2>So funktioniert die Anmeldung</h2><div class="box small">
  <p style="margin:0 0 10px"><b>Jede Person hat ihr eigenes Konto.</b><br><span class="muted">So kann niemand für andere abhaken oder tauschen. Hast du schon ein Konto, gib deine E-Mail und dein Passwort ein und tippe auf „Anmelden“.</span></p>
  <p style="margin:0 0 10px"><b>Du hast einen Einladungscode?</b><br><span class="muted">Der Code ist kein Passwort. Gib deine eigene E-Mail und ein neues Passwort ein (mindestens 6 Zeichen) und tippe auf „Neues Konto erstellen“. Auf der nächsten Seite trägst du den Code bei „Einem Haushalt beitreten“ ein.</span></p>
@@ -628,7 +630,7 @@ function viewLogin(){
  ${legalLinks()}`;
 }
 function viewSetup(){
- return `<div class="box"><div class="muted small">Angemeldet als ${esc(user&&user.email)}</div>${authMsg?`<div class="err">${esc(authMsg)}</div>`:''}</div>
+ return `<div class="box"><div class="muted small">Angemeldet als ${user&&user.isAnonymous?'Test-Konto':esc(user&&user.email)}</div>${authMsg?`<div class="err">${esc(authMsg)}</div>`:''}</div>
  <h2>Neuen Haushalt anlegen</h2><div class="box"><div class="muted small">Einrichtung · Schritt 1 von 5</div><div class="wizbar"><i style="width:20%"></i></div>
  <label class="f" for="hn">Name des Haushalts</label><input id="hn" class="inp" placeholder="z. B. Familie Klein oder WG Uhlandstraße" autocomplete="off">
  <label class="f" for="myName">Dein Name</label><input id="myName" class="inp" placeholder="So erscheinst du im Plan" autocomplete="given-name">
@@ -941,10 +943,11 @@ document.addEventListener('click',async e=>{
  if(a==='tourEnd'){tour=null;whatsNew=null;try{localStorage.setItem('hh_tour','1')}catch(e){}render();return}
  if(a==='wnClose'){whatsNew=null;tour=null;render();return}
  // Konto
+ if(a==='testLogin'){return run(async()=>{try{await auth.signInAnonymously()}catch(e){if(e&&e.code==='auth/operation-not-allowed')throw new Error('Der anonyme Login ist in Firebase noch nicht aktiviert (Authentication → Sign-in method → Anonym).');throw e}})}
  if(a==='login'){const em=$('#em').value.trim(),pw=$('#pw').value;lf.em=em;lf.pw=pw;return run(()=>auth.signInWithEmailAndPassword(em,pw))}
  if(a==='signup'){const em=$('#em').value.trim(),pw=$('#pw').value;lf.em=em;lf.pw=pw;lf.ok=$('#consent').checked;if(!lf.ok){authMsg='Bitte bestätige für ein neues Konto, dass du die Datenschutzerklärung gelesen hast.';render();return}return run(()=>auth.createUserWithEmailAndPassword(em,pw))}
  if(a==='reset'){const em=$('#em').value.trim();if(!em){authMsg='Gib oben deine E-Mail ein, dann tippe erneut auf „Passwort vergessen?“.';return render()}return run(async()=>{await auth.sendPasswordResetEmail(em);uiAlert('Wir haben dir eine E-Mail zum Zurücksetzen geschickt. Schau auch im Spam-Ordner nach.')})}
- if(a==='logout'){if(await uiConfirm('Möchtest du dich auf diesem Gerät abmelden?','Abmelden'))auth.signOut();return}
+ if(a==='logout'){if(user&&user.isAnonymous){if(await uiConfirm('Test beenden? Test-Konto und Test-Haushalt werden gelöscht.','Test beenden',true))endTest();return}if(await uiConfirm('Möchtest du dich auf diesem Gerät abmelden?','Abmelden'))auth.signOut();return}
  if(a==='create'){const nm=$('#hn').value.trim(),imp=$('#imp')?$('#imp').checked:false,pr='standard',mn=$('#myName').value.trim();if(!mn){authMsg='Bitte gib deinen Namen ein.';return render()}return run(()=>createHousehold(nm,imp,pr,mn))}
  if(a==='join'){const c=$('#jc').value;if(!c.trim()){authMsg='Bitte den Einladungscode eingeben.';return render()}return run(()=>joinHousehold(c))}
  if(!plan)return;
@@ -1490,7 +1493,7 @@ function installBox(){return isStandalone()?'':`<h2>Als App installieren</h2><di
 function wizSet(n){wiz=n?Object.assign({},wiz||{},{step:n}):null;try{n?localStorage.setItem('hh_wiz_'+hid,String(n)):localStorage.removeItem('hh_wiz_'+hid)}catch(e){}render();window.scrollTo(0,0)}
 function viewWiz(){
  const s=wiz.step,N=5;
- let h=`<div class="box"><div class="muted small">Einrichtung · Schritt ${s} von ${N}</div><div class="wizbar"><i style="width:${s/N*100}%"></i></div>`;
+ let h=`<div class="box">${user&&user.isAnonymous?'<div class="row"><span class="tag warn">Testmodus</span><span class="sp"></span><button class="link" data-a="logout">Test beenden</button></div>':''}<div class="muted small">Einrichtung · Schritt ${s} von ${N}</div><div class="wizbar"><i style="width:${s/N*100}%"></i></div>`;
  const nav=(next,extra)=>`<div class="row" style="margin-top:16px;flex-wrap:wrap"><button class="btn" data-a="wizBack">Zurück</button><span class="sp"></span>${extra||''}<button class="btn pri" data-a="wizNext">${next||'Weiter'}</button></div>`;
  if(s===2){
   h+=`<h2 style="margin-top:8px">Wer wohnt im Haushalt?</h2><div class="muted small">Lege alle Personen an und gib jeder eine Rolle. Eltern können für Kinder abhaken und buchen, Kinder brauchen kein eigenes Konto.</div>`;
@@ -1541,7 +1544,7 @@ async function shareMsg(text,hash){
 /* Zugang und Mitglieder */
 function viewAccess(){
  const mi=plan.memberInfo||{},mem=plan.members||[];
- let h=`<h2>Zugang</h2><div class="box"><div class="small">Angemeldet als <b>${esc(user.email)}</b></div>
+ let h=`<h2>Zugang</h2><div class="box"><div class="small">Angemeldet als <b>${user.isAnonymous?'Test-Konto':esc(user.email)}</b></div>
  <div class="muted small" style="margin-top:6px">Jede Person erstellt ein eigenes Konto und tritt mit diesem Code bei. Danach verknüpft sie sich einmalig mit ihrem Namen:</div>
  <div class="code">${esc(plan.code)}</div><div class="row" style="flex-wrap:wrap"><button class="btn sm pri" data-a="invite">Einladung teilen</button><button class="btn sm" data-a="copyCode">Code kopieren</button><button class="btn sm" data-a="renewCode">Code erneuern</button></div></div>`;
  h+=`<h2>Konten im Haushalt</h2><div class="box">`+mem.map(uid=>`<div class="ti"><span class="sp small">${esc(mi[uid]||'Konto ohne bekannte E-Mail')}${uid===user.uid?' <span class="muted">(dieses Gerät)</span>':''}</span>${uid===user.uid?'':`<button class="btn sm del" data-a="memRemove" data-v="${esc(uid)}">Entfernen</button>`}</div>`).join('')+`</div>`;
@@ -1829,6 +1832,25 @@ function viewLegal(){
 }
 
 /* Konto löschen */
+async function wipeAccount(last){
+ stopAll();
+ if(hid){
+  const ref=H();
+  if(last){
+   for(const c of ['checks','swaps','payouts','log','chat','market','photos','proposals','shop','timers']){const docs=(await ref.collection(c).get()).docs;for(let i=0;i<docs.length;i+=400){const b=db.batch();docs.slice(i,i+400).forEach(d=>b.delete(d.ref));await b.commit()}}
+   if(plan&&plan.code)await db.collection('codes').doc(plan.code).delete().catch(()=>{});
+   await ref.delete();
+  }else await ref.update({members:FV.arrayRemove(user.uid),['memberInfo.'+user.uid]:FV.delete()});
+ }
+ await db.collection('users').doc(user.uid).delete().catch(()=>{});
+}
+async function endTest(){
+ const h=hid;
+ try{await wipeAccount(!!(plan&&(plan.members||[]).length<=1))}catch(e){console.error(e)}
+ try{if(h)localStorage.removeItem('hh_wiz_'+h);localStorage.removeItem('hh_tour')}catch(e){}
+ try{await user.delete()}catch(e){console.error(e);await auth.signOut()}
+ toast('Test beendet');
+}
 async function deleteAccount(){
  if(!user)return;
  const last=!!(plan&&(plan.members||[]).length<=1);
@@ -1836,16 +1858,7 @@ async function deleteAccount(){
  if(!pw)return;
  try{
   await user.reauthenticateWithCredential(firebase.auth.EmailAuthProvider.credential(user.email,pw));
-  stopAll();
-  if(hid){
-   const ref=H();
-   if(last){
-    for(const c of ['checks','swaps','payouts','log']){const docs=(await ref.collection(c).get()).docs;for(let i=0;i<docs.length;i+=400){const b=db.batch();docs.slice(i,i+400).forEach(d=>b.delete(d.ref));await b.commit()}}
-    if(plan&&plan.code)await db.collection('codes').doc(plan.code).delete().catch(()=>{});
-    await ref.delete();
-   }else await ref.update({members:FV.arrayRemove(user.uid),['memberInfo.'+user.uid]:FV.delete()});
-  }
-  await db.collection('users').doc(user.uid).delete();
+  await wipeAccount(last);
   await user.delete();
   uiAlert('Dein Konto wurde gelöscht.');
  }catch(e){
@@ -1984,7 +1997,7 @@ document.addEventListener('click',e=>{
 },true);
 document.addEventListener('keydown',()=>{ST.last=Date.now()},true);
 function statsFlush(){
- if(!statsAllowed()){ST.sec=0;ST.clicks=0;ST.acts={};ST.session=false;return}
+ if(!statsAllowed()||(user&&user.isAnonymous)){ST.sec=0;ST.clicks=0;ST.acts={};ST.session=false;return}
  const inc=FV.increment,today=iso(new Date()),sec=ST.sec,clicks=ST.clicks,acts=ST.acts,sess=ST.session?1:0;
  ST.sec=0;ST.clicks=0;ST.acts={};ST.session=false;
  const actInc={};Object.entries(acts).forEach(([k,v])=>{actInc[k.replace(/[.\/\[\]~*]/g,'_')]=inc(v)});
