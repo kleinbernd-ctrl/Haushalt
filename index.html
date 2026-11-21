@@ -1170,7 +1170,7 @@ function afterFirstLoad(){
  },300);
 }
 async function checkVersion(){
- try{const r=await fetch(location.href.split('#')[0].split('?')[0]+'?v='+Date.now(),{cache:'no-store'});const t=await r.text();const m=t.match(/APP_VERSION='([^']+)'/);
+ try{const r=await fetch(location.href.split('#')[0].split('?')[0]+'?v='+Date.now(),{cache:'no-store'});const t=await r.text();const m=t.match(/APP_VERSION=["']([^"']+)["']/);
   if(m&&m[1]!==APP_VERSION&&m[1]!==newVer){newVer=m[1];if(mode==='app')softRender()}}catch(e){}
 }
 document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')checkVersion()});
